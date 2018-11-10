@@ -4,9 +4,9 @@ from sklearn import linear_model
 import metrics
 
 # read in data as Pandas DataFrames
-sales = pd.read_excel('sales.xlsx')
-services = pd.read_excel('services.xlsx')
-survey = pd.read_excel('survey.xlsx')
+sales = pd.read_excel('..\..\data\sales.xlsx')
+services = pd.read_excel('..\..\data\services.xlsx')
+survey = pd.read_excel('..\..\data\survey.xlsx')
 
 # remove any duplicate data in each of the data sets
 sales.drop_duplicates(subset=['customer_id','household_id','model_year', 'model_type', 'msrp', 'trans_type', 'contract_type'])
