@@ -38,15 +38,17 @@ for customer in sales_customers:
     customer_list.append(obj)
 
 # creates a column of independent variable values for all customers
-total_transactions = [customer.total_transactions() for customer in customer_list]
-min_purchase = [customer.min_purchase() for customer in customer_list]
-max_purchase = [customer.max_purchase() for customer in customer_list]
-purchases_by_class = [customer.purchases_by_class() for customer in customer_list]
-retail_purchases = [customer.retail_purchases() for customer in customer_list]
-purchase_indicator = [customer.purchase_indicator() for customer in customer_list]
+# total_transactions = [customer.total_transactions() for customer in customer_list]
+# min_purchase = [customer.min_purchase() for customer in customer_list]
+# max_purchase = [customer.max_purchase() for customer in customer_list]
+# purchases_by_class = [customer.purchases_by_class() for customer in customer_list]
+# retail_purchases = [customer.retail_purchases() for customer in customer_list]
+# purchase_indicator = [customer.purchase_indicator() for customer in customer_list]
 
 # creates a column of dependent variable values for all customers
-total_revenue = [customer.total_revenue() for customer in customer_list]
+# total_revenue = [customer.total_revenue() for customer in customer_list]
+
+# TODO: EACH CUSTOMER OBJECT HAS A SUMMARY AND RESPONSE VARIABLE WHERE ALL THIS INFO IS ALREADY STORED, USE THAT 
 
 def ols(dependent_variable, *args):
     # read all independent and dependent variables into two data frames
@@ -64,6 +66,9 @@ def ols(dependent_variable, *args):
     score = lm.score(data_df, target_df) # returns R^2 score
     coef = lm.coef_ # returns an array of the coefficients of the model
     intercept = lm.intercept_ # returns the intercept of the model
+
+    # TODO: RETURN R^2, T-STAT, P-VALUES, COEFFICIENTS, STANDARD ERROR, etc.
+    # if this isn't possible, switch to statsmodels.api
 
     # what do you want to return?
     return score 
