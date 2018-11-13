@@ -16,7 +16,8 @@ def clusterKMeans(df):
     return None
 
 def validateCluster(something):
-    # Function that validates the given clustering
+    # Function that validates the given clustering, returns True if the cluster should be
+    # considered
 
     return False
 
