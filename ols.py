@@ -12,7 +12,7 @@ survey = pd.read_excel('survey.xlsx')
 sales.drop_duplicates(subset=['customer_id','household_id','model_year', 'model_type', 'msrp', 'trans_type', 'contract_type'])
 services.drop_duplicates(subset=['customer_id','household_id','amount_paid', 'amount_warranty', 'model_year', 'model_type'])
 survey.drop_duplicates(subset=['customer_id','household_id','ltr','model_year','model_class','model_type'])
-
+    
 # make a new data frame for each customer within each data set and store in a list (with respect to each data set)
 sales_customers = [customer for _, customer in sales.groupby(sales['customer_id'])] # 5000 unique customers
 services_customers = [customer for _, customer in services.groupby(services['customer_id'])] # 4307 unique customers
