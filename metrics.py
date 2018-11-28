@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import pandas as pd
+
 import statsmodels.api as sm
 import math
 
@@ -35,13 +36,20 @@ class Customer:
         # calculate total number of transactions a customer has made (helps for calculating other metrics)
         self.total_trans = self.total_transactions()
         # store behavioral metrics in a "summary" list
-        self.summary = [
-            self.max_purchase(self.customer_history, self.start, self.end),
-            self.min_purchase(self.customer_history, self.start, self.end),
-            self.total_revenue(self.customer_history, self.start, self.end),
-            self.model_purchase_gap(self.customer_history, self.start, self.end) / self.total_trans,
-            self.retail_purchases(self.customer_history, self.start, self.end) / self.total_trans,
-        ]
+        if self.total_trans != 0:
+            self.summary = [
+                self.max_purchase(self.customer_history, self.start, self.end),
+                self.min_purchase(self.customer_history, self.start, self.end),
+                self.total_revenue(self.customer_history, self.start, self.end),
+                self.model_purchase_gap(self.customer_history, self.start, self.end) / self.total_trans,
+                self.retail_purchases(self.customer_history, self.start, self.end) / self.total_trans
+            ]
+        else:
+            self.summary = [
+                self.max_purchase(self.customer_history, self.start, self.end),
+                self.min_purchase(self.customer_history, self.start, self.end),
+                self.total_revenue(self.customer_history, self.start, self.end)
+            ]
         self.summary.extend(self.total_class_purchase(self.start, self.end))
         # reset the time period for dependent variables
         self.start, self.end = self.dep_times
@@ -53,41 +61,40 @@ class Customer:
 
     def total_transactions(self):
         total = 0
-        for date in self.customer_history['strdatetime'].values:
+        for date in self.customer_history['datetime'].values:
             encoded = encode_date(date)
-            print(encoded)
-            if encoded >= self.start and encoded < self.end:
+            if encoded >= encode_date(self.start) and encoded < encode_date(self.end):
                 total += 1
         return total
     def purchase_freq(self, customer_history, start, end):
         num_trans = 0
-        for date in self.customer_history['strdatetime'].values:
+        for date in self.customer_history['datetime'].values:
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 num_trans += 1
             return num_trans
     def max_purchase(self, customer_history, start, end):
         max_value = 0
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 max_value = max(self.customer_history['msrp'].values[index], max_value)
         return max_value
     def min_purchase(self, customer_history, start, end):
         min_value = float('inf')
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 min_value = min(self.customer_history['msrp'].values[index], min_value)
         return min_value
     def total_revenue(self, customer_history, start, end):
         total = 0
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 total += self.customer_history['msrp'].values[index]
         return total
 
@@ -96,9 +103,9 @@ class Customer:
         release_month = 6
         sum_of_diff = 0
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 purchase_month = encode_month(date)
                 model_year = self.customer_history['model_year'].values[index]
                 model_month = (model_year - 1) * 12 + release_month
@@ -108,9 +115,9 @@ class Customer:
     def distinct_classes(self, customer_history, start, end):
         classes = set()
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 classLetter = self.customer_history['model_class'].values[index].strip()
                 classes.add(classLetter)
         return len(classes)
@@ -118,9 +125,9 @@ class Customer:
     def retail_purchases(self, customer_history, start, end):
         num_retail = 0
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 contract = self.customer_history['contract_type'].values[index]
                 if contract == "Retail": num_retail += 1
         return num_retail
@@ -142,11 +149,11 @@ class Customer:
     def spend_per_service(self, start, end):
         service_num = 0
         service_paid = 0
-        #for the values in the service history strdatetime, pick appropriate timeframe
+        #for the values in the service history datetime, pick appropriate timeframe
         for index in range(len(self.service_history.values)):
-            date = self.service_history['strdatetime'].values[index]
+            date = self.service_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 service = self.service_history['AMT_DMS_CP_STOT'].values[index]
                 warranty = self.service_history['AMT_DMS_WARR_STOT'].values[index]
                 service_paid = service_num + service + warranty
@@ -157,9 +164,9 @@ class Customer:
     def change_vehicle_spend(self, start, end):
         differences = []
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 if self.customer_history['contract_type'].values[index] == "Retail" and index < len(self.customer_history) - 1:
                     prev = self.customer_history['AMT_TOT_MSRP'].values[index]
                     cur = self.customer_history['AMT_TOT_MSRP'].values[index + 1]
@@ -171,36 +178,36 @@ class Customer:
     def total_class_purchase(self, start, end):
         class_totals = dict()
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
-                if  self.customer_history['contract_type'].values[index] == "Retail":
-                    model = self.customer_history['MODEL_CLASS'].values[index]
+            if encoded >= encode_date(start) and encoded < encode_date(end):
+                if self.customer_history['contract_type'].values[index] == "Retail":
+                    model = self.customer_history['model_class'].values[index]
                     if model not in class_totals:
-                        class_totals.update(model, 1)
+                        class_totals.update({model: 1})
                     else:
-                        class_totals.update(model, class_totals.get(model) + 1)
+                        class_totals.update({model: class_totals.get(model) + 1})
         return class_totals
 
     #Number of household vehicles serviced within the last year
     #maybe wrong, this is total services used within a time interval
     def active_household_inventory(self, start, end):
         service_total = 0
-        for date in self.service_history['strdatetime'].values:
-            if date >= start and date < end:
+        for date in self.service_history['datetime'].values:
+            if date >= encode_date(start) and date < encode_date(end):
                 service_total += 1
         return service_total
 
     #Average amount of time between individual vehicle purchases
-    #How did we say we were doing strdatetime?
+    #How did we say we were doing datetime?
     def average_vehicle_interval(self, start, end):
         count = 0
         holder = list()
         differences = list()
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 if self.customer_history['contract_type'].values[index] == "Retail":
                     holder.append(encoded)
                     count +=1
@@ -212,7 +219,7 @@ class Customer:
     #need to re-write to go by year
     def annual_service_freq(self, start, end):
         service_total = 0
-        for date in self.service_history['strdatetime'].values:
+        for date in self.service_history['datetime'].values:
             if date >= start and date < end:
                 service_total += 1
         return service_total
@@ -221,7 +228,7 @@ class Customer:
     def lease_rate(self, start, end):
         lease_count = 0
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if date >= start and date < end:
                 if self.customer_history['contract_type'].values[index] == "lease":
@@ -234,7 +241,7 @@ class Customer:
         today = encode_date(today_date)
         average_interval = self.average_vehicle_interval(self.start, self.end)
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             last_purchase_date = max(last_purchase_date, encoded)
         return (today - last_purchase_date)/average_interval
@@ -244,9 +251,9 @@ class Customer:
         holder = list()
         differences = list()
         for index in range(len(self.service_history.values)):
-            date = self.service_history['strdatetime'].values[index]
+            date = self.service_history['datetime'].values[index]
             encoded = encode_date(date)
-            if encoded >= start and encoded < end:
+            if encoded >= encode_date(start) and encoded < encode_date(end):
                 holder.append(encoded)
         for i in range(len(holder) - 1):
             differences.append(holder[i+1] - holder[i])
@@ -256,7 +263,7 @@ class Customer:
     def year_disparity(self):
         differences = list()
         for index in range(len(self.customer_history.values)):
-            date = self.customer_history['strdatetime'].values[index]
+            date = self.customer_history['datetime'].values[index]
             purchase_year = encode_year(date)
             model_year = self.customer_history['MODEL_YEAR'].values[index]
             differences.append(purchase_year - model_year)
