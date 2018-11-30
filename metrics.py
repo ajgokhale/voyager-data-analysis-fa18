@@ -18,7 +18,7 @@ def encode_date(date_str):
     return (int(date[0]) - 1)*31 + (int(date[1]) - 1) + int(date[2])*372
 
 class Customer:
-    classes = []
+    classes = ["GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR"]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
 
     # when the Customer object is instantiated, all its information will be calculated automatically
@@ -44,21 +44,22 @@ class Customer:
                 self.model_purchase_gap(self.customer_history, self.start, self.end) / self.total_trans,
                 self.retail_purchases(self.customer_history, self.start, self.end) / self.total_trans
             ]
-        else:
-            self.summary = [
-                self.max_purchase(self.customer_history, self.start, self.end),
-                self.min_purchase(self.customer_history, self.start, self.end),
-                self.total_revenue(self.customer_history, self.start, self.end)
+            self.add_classes()
+            # reset the time period for dependent variables
+            self.start, self.end = self.dep_times
+            # store dependent metrics in a "response" list
+            self.response = [
+                self.total_revenue(self.customer_history, self.start, self.end),
+                self.total_transactions() != 0
             ]
-        self.summary.extend(self.total_class_purchase(self.start, self.end))
-        # reset the time period for dependent variables
-        self.start, self.end = self.dep_times
-        # store dependent metrics in a "response" list
-        self.response = [
-            self.total_revenue(self.customer_history, self.start, self.end),
-            self.total_transactions() != 0
-        ]
+        else:
+            self.summary = None
+            self.response = None
 
+    def add_classes(self):
+        class_purchases = self.total_class_purchase(self.start, self.end)
+        for vehicle_class in self.classes:
+            self.summary.append(class_purchases[vehicle_class])
     def total_transactions(self):
         total = 0
         for date in self.customer_history['datetime'].values:
@@ -177,16 +178,15 @@ class Customer:
     #dictionary for each X-class. kinda clunky but should work
     def total_class_purchase(self, start, end):
         class_totals = dict()
+        for vehicle_class in self.classes:
+            class_totals[vehicle_class] = 0
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= encode_date(start) and encoded < encode_date(end):
                 if self.customer_history['contract_type'].values[index] == "Retail":
                     model = self.customer_history['model_class'].values[index]
-                    if model not in class_totals:
-                        class_totals.update({model: 1})
-                    else:
-                        class_totals.update({model: class_totals.get(model) + 1})
+                    class_totals.update({model: class_totals.get(model) + 1})
         return class_totals
 
     #Number of household vehicles serviced within the last year
