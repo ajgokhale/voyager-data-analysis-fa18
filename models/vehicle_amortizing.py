@@ -9,13 +9,18 @@ import metrics
 #2006, new: 52 mo, used: 38 mo
 #2016 new: 79 mo, used: 66 mo ~7 years for new
 
+
+
 #distribute the cost of a vehicle annually over average length of ownership
 
 def uniform_decay(customer):
     prices = make_array()
-    for price in customer.customer_history['msrp'].values:
-        per_year = (price/79)*12 #annual "payment"
-        for i in np.arange(7)
+    for row in customer.customer_history.iterrows():
+        date = metrics.encode_year(row['datetime'].values[0])
+        decay_length = (date - 2006)*2.7+52
+        for price in row['msrp'].values[0]:
+            per_year = (price/decay_length)*12 #annual "payment"
+            for i in np.arange(decay_length/12)
                 prices.append(per_year)
     df = pd.DataFrame({'prices':prices})
     return df
@@ -25,7 +30,7 @@ def exponential_decay(customer, class_depreciation):
     prices = make_array()
     for price in customer.customer_history['msrp'].values:
         P = price
-        r = depreciation
+        r = 0.3 #average decay rate
         for time in np.arange(7)
             prices.append(P - P*(math.pow(math.e,r*(7-time)))
     ex = pd.DataFrame({'prices':prices})
