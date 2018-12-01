@@ -4,9 +4,9 @@ import statsmodels.api as sm
 import metrics
 
 # read in data as Pandas DataFrames
-sales = pd.read_csv('salescsv.csv')
-services = pd.read_csv('servicescsv.csv')
-survey = pd.read_csv('surveycsv.csv')
+sales = pd.read_csv('../data/salescsv.csv')
+services = pd.read_csv('../data/servicescsv.csv')
+survey = pd.read_csv('../data/surveycsv.csv')
 
 # remove any duplicate data in each of the data sets
 sales.drop_duplicates(subset=['customer_id','household_id','model_year', 'model_type', 'msrp', 'trans_type', 'contract_type'])
