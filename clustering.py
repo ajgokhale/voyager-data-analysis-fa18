@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import metrics
+import cluster
 import sys
 
 # read in data as Pandas DataFrames
