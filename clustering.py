@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import metrics
+import cluster
 import sys
 
 # read in data as Pandas DataFrames
@@ -20,7 +21,7 @@ services_customers = [customer for _, customer in services.groupby(services['cus
 survey_customers = [customer for _, customer in survey.groupby(survey['customer_id'])] # 1528 unique customers
 
 # IMPORTANT: values for regression's start and end times (format: ___________)
-start_time_ind, end_time_ind, start_time_dep, end_time_dep = "1/1/2005", "12/31/2014", "1/1/2015", "12/31/2018"
+start_time_ind, end_time_ind, start_time_dep, end_time_dep = "1/1/2005", "12/31/2018", "1/1/2005", "12/31/2018"
 
 print("Data read in and parsed without a hitch")
 
@@ -38,13 +39,11 @@ for customer in sales_customers:
     services_history = contains_customer(services_customers, customer['customer_id'].values[0])
     survey_history = contains_customer(survey_customers, customer['customer_id'].values[0])
     obj = metrics.Customer(sales_history, services_history, survey_history, start_time_ind, end_time_ind, start_time_dep, end_time_dep)
-    # FOR TESTING
-    print(obj.summary)
     if obj.summary != None: customer_list.append(obj)
     i += 1
     # FOR TESTING
-    if i > 10:
-        break
+    #if i > 10:
+    #    break
 
 print(i, " customer objects successfully constructed and instantiated")
 
@@ -53,23 +52,11 @@ independent_variables = [customer.summary for customer in customer_list]
 x = np.asarray(independent_variables)
 
 # creates a 1D array of dependent variable values for all customers
-dependent_variable = [customer.response[0] for customer in customer_list]
+dependent_variable = [customer.response for customer in customer_list]
 y = np.asarray(dependent_variable)
 
-def ols(x, y):
-    # perform linear regression
-    X = sm.add_constant(x) # add constant term
-    print(X)
-    print(y)
-    model = sm.OLS(y, X).fit()
+# JAKE: Horizontally concatenate x and y
 
-    print("OLS performed successfully")
-
-    # return table of stats
-    return model.summary()
 
 print("Running OLS...")
-print(ols(x, y))
-
-# if we eventually want predictions
-# predictions = model.predict(data_df)
+print()
