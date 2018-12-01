@@ -5,6 +5,8 @@ import pandas as pd
 import statsmodels.api as sm
 import math
 
+from datetime import date
+
 # utility functions to convert date strings to encoded int
 # encoded date is comparable, but does not support arithmetic
 def encode_year(date_str):
@@ -14,8 +16,9 @@ def encode_month(date_str):
     date = date_str.split('/')
     return int(date[0]) + int(date[2])*12
 def encode_date(date_str):
-    date = date_str.split('/')
-    return (int(date[0]) - 1)*31 + (int(date[1]) - 1) + int(date[2])*372
+    date_lst = date_str.split('/')
+    #return (int(date[0]) - 1)*31 + (int(date[1]) - 1) + int(date[2])*372
+    return date(int(date_lst[2]), int(date_lst[0]), int(date_lst[1]))
 
 class Customer:
     classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
@@ -42,7 +45,8 @@ class Customer:
                 self.min_purchase(self.customer_history, self.start, self.end),
                 self.total_revenue(self.customer_history, self.start, self.end),
                 self.model_purchase_gap(self.customer_history, self.start, self.end) / self.total_trans,
-                self.retail_purchases(self.customer_history, self.start, self.end) / self.total_trans
+                self.retail_purchases(self.customer_history, self.start, self.end) / self.total_trans,
+                self.average_vehicle_interval(self.start, self.end)
             ]
             self.add_classes()
             # reset the time period for dependent variables
@@ -50,7 +54,7 @@ class Customer:
             # store dependent metrics in a "response" list
             self.response = [
                 self.total_revenue(self.customer_history, self.start, self.end),
-                self.total_transactions() != 0
+                self.purchase_indicator()
             ]
         else:
             self.summary = None
@@ -134,7 +138,10 @@ class Customer:
         return num_retail
 
     def purchase_indicator(self):
-        return (self.total_trans != 0)
+        if self.total_transactions() != 0:
+            return 1
+        else:
+            return 0
 
 
     #compile a dictionary of model to base MSRP data structure to reference
@@ -171,7 +178,7 @@ class Customer:
                 if self.customer_history['contract_type'].values[index] == "Retail" and index < len(self.customer_history) - 1:
                     prev = self.customer_history['AMT_TOT_MSRP'].values[index]
                     cur = self.customer_history['AMT_TOT_MSRP'].values[index + 1]
-                    differences.append((prev-cur))
+                    differences.append((cur-prev))
         return sum(differences)/self.total_trans
 
     #Total number of X-class vehicles purchased
@@ -184,10 +191,12 @@ class Customer:
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= encode_date(start) and encoded < encode_date(end):
-                if self.customer_history['contract_type'].values[index] == "Retail":
-                    model = self.customer_history['model_class'].values[index]
-                    class_totals.update({model: class_totals.get(model) + 1})
+                model = self.customer_history['model_class'].values[index]
+                class_totals.update({model: class_totals.get(model) + 1})
         return class_totals
+
+
+#############################
 
     #Number of household vehicles serviced within the last year
     #maybe wrong, this is total services used within a time interval
@@ -197,6 +206,9 @@ class Customer:
             if date >= encode_date(start) and date < encode_date(end):
                 service_total += 1
         return service_total
+
+############################
+############################
 
     #Average amount of time between individual vehicle purchases
     #How did we say we were doing datetime?
@@ -208,21 +220,16 @@ class Customer:
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= encode_date(start) and encoded < encode_date(end):
-                if self.customer_history['contract_type'].values[index] == "Retail":
-                    holder.append(encoded)
-                    count +=1
+                holder.append(encoded)
+                count +=1
         for i in range(len(holder) - 1):
-            differences.append(holder[i+1] - holder[i])
-        return sum(differences)/count
-
-    #Average number of transactions per year
-    #need to re-write to go by year
-    def annual_service_freq(self, start, end):
-        service_total = 0
-        for date in self.service_history['datetime'].values:
-            if date >= start and date < end:
-                service_total += 1
-        return service_total
+            delta = holder[i+1]-holder[i]
+            differences.append(delta.days)
+        if count == 1:
+            timeframe = encode_date(end) - encode_date(start)
+            return timeframe.days / 1.5
+        else:
+            return sum(differences)/(count - 1)
 
     #Ratio of leasing transactions to total transactions
     def lease_rate(self, start, end):

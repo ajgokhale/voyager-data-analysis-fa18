@@ -58,6 +58,9 @@ for customer in customer_list:
     for element in customer.summary:
         if math.isnan(element) or math.isinf(element):
             valid = False
+    for element in customer.response:
+        if math.isnan(element) or math.isinf(element):
+            valid = False
     if valid:
         independent_variables.append(customer.summary)
         dependent_variables.append(customer.response)
