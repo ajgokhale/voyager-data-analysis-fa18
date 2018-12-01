@@ -18,7 +18,7 @@ def encode_date(date_str):
     return (int(date[0]) - 1)*31 + (int(date[1]) - 1) + int(date[2])*372
 
 class Customer:
-    classes = ["GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR"]
+    classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
 
     # when the Customer object is instantiated, all its information will be calculated automatically

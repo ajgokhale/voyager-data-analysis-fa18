@@ -3,6 +3,8 @@ import pandas as pd
 import statsmodels.api as sm
 import metrics
 import sys
+import itertools
+import math
 
 # read in data as Pandas DataFrames
 sales = pd.read_csv('../data/salescsv.csv')
@@ -19,8 +21,8 @@ sales_customers = [customer for _, customer in sales.groupby(sales['customer_id'
 services_customers = [customer for _, customer in services.groupby(services['customer_id'])] # 4307 unique customers
 survey_customers = [customer for _, customer in survey.groupby(survey['customer_id'])] # 1528 unique customers
 
-# IMPORTANT: values for regression's start and end times (format: ___________)
-start_time_ind, end_time_ind, start_time_dep, end_time_dep = "1/1/2005", "12/31/2014", "1/1/2015", "12/31/2018"
+# IMPORTANT: values for regression's start and end times (format: [M]M/[D]D/YYYY)
+start_time_ind, end_time_ind, start_time_dep, end_time_dep = "1/1/2005", "1/1/2015", "1/1/2015", "1/1/2019"
 
 print("Data read in and parsed without a hitch")
 
@@ -39,37 +41,74 @@ for customer in sales_customers:
     survey_history = contains_customer(survey_customers, customer['customer_id'].values[0])
     obj = metrics.Customer(sales_history, services_history, survey_history, start_time_ind, end_time_ind, start_time_dep, end_time_dep)
     # FOR TESTING
-    print(obj.summary)
+    # print(obj.summary)
     if obj.summary != None: customer_list.append(obj)
     i += 1
     # FOR TESTING
-    if i > 10:
-        break
+    #if i > 10:
+    #    break
 
 print(i, " customer objects successfully constructed and instantiated")
 
 # creates a 2D array of independent variable values for all customers
-independent_variables = [customer.summary for customer in customer_list]
+independent_variables = []
+dependent_variables = []
+for customer in customer_list:
+    valid = True
+    for element in customer.summary:
+        if math.isnan(element) or math.isinf(element):
+            valid = False
+    if valid:
+        independent_variables.append(customer.summary)
+        dependent_variables.append(customer.response)
+    else:
+        print(customer.summary)
+#independent_variables = [customer.summary for customer in customer_list if float('nan') not in customer.summary]
 x = np.asarray(independent_variables)
 
 # creates a 1D array of dependent variable values for all customers
-dependent_variable = [customer.response[0] for customer in customer_list]
-y = np.asarray(dependent_variable)
+y = np.asarray(dependent_variables)
 
-def ols(x, y):
+print(x)
+
+def ols(x, y, ind, dep):
     # perform linear regression
-    X = sm.add_constant(x) # add constant term
-    print(X)
-    print(y)
-    model = sm.OLS(y, X).fit()
+    X = x[:, ind]
+    X = sm.add_constant(X) # add constant term
+    Y = y[:, dep]
+    model = sm.OLS(Y, X).fit()
 
     print("OLS performed successfully")
 
     # return table of stats
     return model.summary()
 
+def iterative_ols(x, y, mandatory_ind, optional_ind, deps):
+    combos = all_combos(optional_ind)
+    print(combos)
+    summaries = []
+    for iteration in combos:
+        for dep in deps:
+            metrics = mandatory_ind + list(iteration)
+            summaries.append(ols(x, y, metrics, [dep]))
+    return summaries
+
+def all_combos(lst):
+    length = len(lst)
+    result = []
+    for i in range(1, length+1):
+        result += itertools.combinations(optional_ind, i)
+    return result
+
 print("Running OLS...")
-print(ols(x, y))
+mandatory_ind = [0,1,2]
+optional_ind = [3, 4]
+# selected_dep MUST be one element
+selected_dep = [0, 1]
+# print(ols(x, y, selected_ind, selected_dep))
+results = iterative_ols(x, y, mandatory_ind, optional_ind, selected_dep)
+for summary in results:
+    print(summary)
 
 # if we eventually want predictions
 # predictions = model.predict(data_df)
