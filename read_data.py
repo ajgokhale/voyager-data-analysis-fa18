@@ -49,6 +49,15 @@ def customers(start_time_ind, end_time_ind, start_time_dep, end_time_dep, allow_
 
 def customer_df(sti, eti, std, etd, allsin):
     # creates a 2D array of independent variable values for all customers
+    if len(sys.argv) >= 2:
+        arg = sys.argv[1]
+        if arg == "saved":
+            try:
+                x = np.load("output/ind_arr.npy")
+                y = np.load("output/dep_arr.npy")
+                return x, y
+            except:
+                print("Could not load saved files")
     customer_list = customers(sti, eti, std, etd, allsin)
     independent_variables = []
     dependent_variables = []
@@ -71,4 +80,6 @@ def customer_df(sti, eti, std, etd, allsin):
     # creates a 1D array of dependent variable values for all customers
     y = np.asarray(dependent_variables)
 
+    np.save("output/ind_arr.npy", x)
+    np.save("output/dep_arr.npy", y)
     return x, y

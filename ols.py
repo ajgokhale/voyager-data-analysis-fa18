@@ -4,6 +4,7 @@ import sys
 import itertools
 import math
 import read_data
+import write_data
 
 ################# PARAMETERS ####################
 
@@ -53,8 +54,10 @@ optional_ind = [3, 4]
 selected_dep = [0, 1]
 # print(ols(x, y, selected_ind, selected_dep))
 results = iterative_ols(x, y, mandatory_ind, optional_ind, selected_dep)
-for summary in results:
-    print(summary)
+#for summary in results:
+#    print(summary)
+
+write_data.save_ols_results(results)
 
 # if we eventually want predictions
 # predictions = model.predict(data_df)
