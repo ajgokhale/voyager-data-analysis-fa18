@@ -30,15 +30,17 @@ print("Data read in and parsed without a hitch")
 def contains_customer(lst, customer_id):
     for customer in lst:
         if customer_id == customer['customer_id'].values[0]:
-            return customer
-    return None
+            return customer, False
+    return None, True
 i = 0
 # creates a list of customer objects
 customer_list = []
 for customer in sales_customers:
     sales_history = customer
-    services_history = contains_customer(services_customers, customer['customer_id'].values[0])
+    services_history, invalid = contains_customer(services_customers, customer['customer_id'].values[0])
+    if invalid: continue
     survey_history = contains_customer(survey_customers, customer['customer_id'].values[0])
+
     obj = metrics.Customer(sales_history, services_history, survey_history, start_time_ind, end_time_ind, start_time_dep, end_time_dep)
     # FOR TESTING
     # print(obj.summary)
