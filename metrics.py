@@ -24,19 +24,15 @@ class Customer:
     classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
-    metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-     "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
+    #metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
+    # "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
     
     # when the Customer object is instantiated, all its information will be calculated automatically
     
     def __init__(self, sales_history, service_history, survey_history,
             start_time_ind, end_time_ind, start_time_dep, end_time_dep,
             allow_single=True):
-        metric_list = ["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-     "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"]
-        if not allow_single:
-            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase"])
-        self.metric_list = np.asarray(metric_list)
+        
         self.customer_history = sales_history
         self.service_history = service_history
         self.survey_history = survey_history
@@ -76,6 +72,13 @@ class Customer:
         else:
             self.summary = None
             self.response = None
+    @staticmethod
+    def metric_names(allow_single):
+        metric_list = ["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
+            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"]
+        if not allow_single:
+            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase"])
+        return np.asarray(metric_list)
 
     def add_classes(self):
         class_purchases = self.total_class_purchase()
