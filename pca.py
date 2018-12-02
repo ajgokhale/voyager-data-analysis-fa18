@@ -50,9 +50,9 @@ class PCADF:
 
         # Insert any design modifications here!
 
+        fig2 = plt.gcf()
         plt.show()
-        fig = plt.figure()
-        return fig
+        return fig2
 
     def plot_3d_pca(self, result, z_elevation=30, xy_azimuth=150):
         # df = dataframe
@@ -87,9 +87,10 @@ class PCADF:
         ax.set_zlabel("PC3")
         ax.set_title("PCA on the Data Set")
         ax.view_init(z_elevation, xy_azimuth)
+        
+        fig3 = plt.gcf()
         plt.show()
-        fig = plt.figure()
-        return fig
+        return fig3
 
     def plot_3d_pca_360_animation(self, result, z_elevation=30):
         
@@ -143,7 +144,7 @@ x, y = read_data.customer_df(start_time_ind, end_time_ind, start_time_dep, end_t
     allow_single)
 
 # data frames
-ind_df = pd.DataFrame(x, columns=metrics.Customer.metric_names[:len(metrics.Customer.metric_names)-2])
+ind_df = pd.DataFrame(x, columns=metrics.Customer.metric_names(allow_single)[:len(metrics.Customer.metric_names(allow_single))-2])
 
 # instantiate the PCA object
 pca_obj = PCADF(ind_df)
@@ -151,23 +152,19 @@ pca_obj = PCADF(ind_df)
 # PCA in 2D
 df2d, pca2d = pca_obj.pca_2d()
 np.save("output/pca2ddf.npy", df2d)
-o = open("output/pca2dobj.out", 'w+')
+o = open("output/pca2dobj.out", 'wb')
 pickle.dump(pca2d, o)
 o.close()
 fig2d = pca_obj.plot_2d_pca(df2d)
-fig2d.savefig("output/pca2dplot.png")
+fig2d.savefig("output/pca2dplot.png", format='png')
+print('ratio variances:', pca2d.explained_variance_ratio_)
+print('first principal component', pca2d.components_[0])
 
 # PCA in 3D
 df3d, pca3d = pca_obj.pca_3d()
 np.save("output/pca3ddf.npy", df3d)
-o = open("output/pca3dobj.out", 'w+')
+o = open("output/pca3dobj.out", 'wb')
 pickle.dump(pca3d, o)
 o.close()
-fig3d = pca_obj.plot_3d(df3d)
-fig2d.savefig("output/pca3dplot.png")
-
-# return number of componenets needed for 95% of the variation in PCA to be accounted for
-num_comp = pca_obj.general_pca_num_components(0.95)
-
-# transform dataframe to the one with principal components (no need for u, s, and v matrices)
-trans_df = pca_obj.general_pca(0.95)
+fig3d = pca_obj.plot_3d_pca(df3d)
+fig3d.savefig("output/pca3dplot.png", format='png')
