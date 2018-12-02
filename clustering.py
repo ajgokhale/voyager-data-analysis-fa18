@@ -125,6 +125,9 @@ for combo_3 in combos_3:
     clustered_3 = cluster.clusterKMeans(std_df_3, k_3)
     clustered_sets_3d.append(clustered_3)
     print('gottem')
+clustered_sets_3d.sort()
+for i in range(10):
+    plot_3dcluster(clustered_sets_3d[i][1], 30, 150)
 combos_2 = itertools.combinations(range(len((joined)[0])), 2)
 combos_2 = list(combos)
 clustered_sets_2d = []
@@ -135,10 +138,7 @@ for combo_2 in combos_2:
     k_2, gapdf_2 = cluster.optimalK(std_df_2)
     clustered_2 = cluster.clusterKMeans(std_df_2, k_2)
     clustered_sets_2d.append(clustered_2)
-    print('gottem')
-# plot_3dcluster_360(clustered, 30)
-print('THREE DIMENSIONS CLUSTERING\n')
-print(clustered_sets_3d)
-print('\n')
-print('TWO DIMENSIONS CLUSTERING\n')
-print(clustered_sets_2d)
+    print('gettem')
+clustered_sets_2d.sort()
+for i in range(10):
+    plot_2dcluster(clustered_sets_2d[i][1], 30, 150)
