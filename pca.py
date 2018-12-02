@@ -8,6 +8,7 @@ import metrics
 from mpl_toolkits.mplot3d import Axes3D
 import math
 import pickle
+import read_data
 
 # PCA for data frames class
 class PCADF:
