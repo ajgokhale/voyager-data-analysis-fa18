@@ -75,9 +75,10 @@ class Customer:
     @staticmethod
     def metric_names(allow_single):
         metric_list = ["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"]
+            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction",]
         if not allow_single:
-            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase"])
+            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase",])
+        metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
         return np.asarray(metric_list)
 
     def add_classes(self):
