@@ -56,4 +56,4 @@ def clusterKMeans(df, k):
     # append y_km to dataframe
     l = list(y_km)
     dataframe['Cluster'] = l 
-    return [kmeans.score, dataframe]
+    return kmeans.score(points), dataframe
