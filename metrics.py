@@ -24,7 +24,7 @@ class Customer:
     classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
-    metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases", "Average Purchase Interval",
+    metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",# "Average Purchase Interval",
      "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
     # when the Customer object is instantiated, all its information will be calculated automatically
     
@@ -49,7 +49,7 @@ class Customer:
                 self.min_purchase(),
                 self.model_purchase_gap(),
                 self.retail_purchases(),
-                self.average_vehicle_interval(),
+                #self.average_vehicle_interval(),
                 self.distinct_classes(),
                 self.spend_per_service(),
             ]
