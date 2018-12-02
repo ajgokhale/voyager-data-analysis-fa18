@@ -43,7 +43,7 @@ class Customer:
         # calculate total number of transactions a customer has made (helps for calculating other metrics)
         self.total_trans, self.service_trans = self.total_transactions()
         # store behavioral metrics in a "summary" list
-        if self.total_trans > 0 and self.service_trans > 0 and allow_single:
+        if self.total_trans > 0 and self.service_trans > 0: #and allow_single:
             self.summary = [
                 self.max_purchase(),
                 self.min_purchase(),
@@ -61,7 +61,7 @@ class Customer:
                 self.total_revenue(),
                 self.purchase_indicator()
             ]
-        elif not allow_single self.total_trans == 1:
+#        elif not allow_single self.total_trans == 1:
 
         else:
             self.summary = None
