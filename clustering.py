@@ -30,6 +30,8 @@ survey_customers = [customer for _, customer in survey.groupby(survey['customer_
 # IMPORTANT: values for regression's start and end times (format: [M]M/[D]D/YYYY)
 start_time_ind, end_time_ind, start_time_dep, end_time_dep = "1/1/2005", "1/1/2015", "1/1/2015", "1/1/2019"
 
+print('working so far')
+
 # helper method to see if a list of customer data frames contains a particular customer
 def contains_customer(lst, customer_id):
     for customer in lst:
@@ -49,6 +51,8 @@ for customer in sales_customers:
 
     if obj.summary != None: customer_list.append(obj)
     i+=1
+
+print('out of the big rip')
 
 # creates a 2D array of independent variable values for all customers
 independent_variables = []
@@ -115,7 +119,7 @@ def plot_3dcluster_360(dataframe, z_elevation):
 
 # plot combos
 combos_3 = itertools.combinations(range(len((joined)[0])), 3)
-combos_3 = list(combos)
+combos_3 = list(combos_3)
 clustered_sets_3d = []
 for combo_3 in combos_3:
     array_3 = (joined)[:, combo_3]
@@ -129,7 +133,7 @@ clustered_sets_3d.sort()
 for i in range(10):
     plot_3dcluster(clustered_sets_3d[i][1], 30, 150)
 combos_2 = itertools.combinations(range(len((joined)[0])), 2)
-combos_2 = list(combos)
+combos_2 = list(combos_2)
 clustered_sets_2d = []
 for combo_2 in combos_2:
     array_2 = (joined)[:, combo_2]
