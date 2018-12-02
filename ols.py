@@ -5,7 +5,6 @@ import itertools
 import math
 import read_data
 import write_data
-import pickle
 
 ################# PARAMETERS ####################
 

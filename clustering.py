@@ -85,7 +85,11 @@ for combo_3 in combos_3:
     #plot_3dcluster(clustered_3[1])
 
     clustered_sets_3d.append(clustered_3)
+    print("#############################")
+    print()
     print("Finished 3D cluster " + str(i))
+    print()
+    print("#############################")
 
 clustered_sets_3d.sort(key=lambda x: x[0])
 
@@ -110,7 +114,11 @@ for combo_2 in combos_2:
     #plot_2dcluster(clustered_2[1])
 
     clustered_sets_2d.append(clustered_2)
+    print("#############################")
+    print()
     print("Finished 2D cluster " + str(i))
+    print()
+    print("#############################")
 
 clustered_sets_2d.sort(key=lambda x: x[0])
 
