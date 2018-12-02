@@ -24,7 +24,8 @@ class Customer:
     classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
-
+    metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases", "Average Purchase Interval",
+     "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
     # when the Customer object is instantiated, all its information will be calculated automatically
     def __init__(self, sales_history, service_history, survey_history,
             start_time_ind, end_time_ind, start_time_dep, end_time_dep):
@@ -40,13 +41,14 @@ class Customer:
         # calculate total number of transactions a customer has made (helps for calculating other metrics)
         self.total_trans, self.service_trans = self.total_transactions()
         # store behavioral metrics in a "summary" list
-        if self.total_trans != 0 and self.service_trans != 0:
+        if self.total_trans > 0 and self.service_trans > 0:
             self.summary = [
                 self.max_purchase(),
                 self.min_purchase(),
                 self.model_purchase_gap(),
                 self.retail_purchases(),
                 self.average_vehicle_interval(),
+                self.distinct_classes(), #new
                 self.spend_per_service(),
             ]
             self.add_classes()
@@ -57,14 +59,16 @@ class Customer:
                 self.total_revenue(),
                 self.purchase_indicator()
             ]
+            #if self.total_trans == 1:
         else:
             self.summary = None
             self.response = None
 
     def add_classes(self):
-        class_purchases = self.total_class_purchase(self.start, self.end)
+        class_purchases = self.total_class_purchase()
         for vehicle_class in self.classes:
             self.summary.append(class_purchases[vehicle_class])
+
     def total_transactions(self):
         total = 0
         service_total = 0
@@ -77,13 +81,6 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 service_total += 1
         return total, service_total
-    def purchase_freq(self):
-        num_trans = 0
-        for date in self.customer_history['datetime'].values:
-            encoded = encode_date(date)
-            if encoded >= self.start and encoded < self.end:
-                num_trans += 1
-            return num_trans
     def max_purchase(self):
         max_value = 0
         for index in range(len(self.customer_history.values)):
@@ -123,7 +120,7 @@ class Customer:
                 sum_of_diff += (purchase_month - model_month)
         return sum_of_diff / self.total_trans
 
-    def distinct_classes(self, customer_history, start, end):
+    def distinct_classes(self):
         classes = set()
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
@@ -167,20 +164,23 @@ class Customer:
 
     #Average difference between successive vehicle purchase MSRPs
     def change_vehicle_spend(self, start, end):
-        differences = []
+        holder = list()
+        differences = list()
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
-                if self.customer_history['contract_type'].values[index] == "Retail" and index < len(self.customer_history) - 1:
-                    prev = self.customer_history['AMT_TOT_MSRP'].values[index]
-                    cur = self.customer_history['AMT_TOT_MSRP'].values[index + 1]
-                    differences.append((cur-prev))
-        return sum(differences)/self.total_trans
+                msrp = self.customer_history['AMT_TOT_MSRP'].values[index]
+                holder.append((encoded, msrp))
+        holder.sort(key=lambda x: x[0])
+        for i in range(len(holder) - 1):
+            diff = holder[i+1][1]-holder[i][1]
+            differences.append(diff)
+        return sum(differences) / (len(holder) - 1)
 
     #Total number of X-class vehicles purchased
     #dictionary for each X-class. kinda clunky but should work
-    def total_class_purchase(self, start, end):
+    def total_class_purchase(self):
         class_totals = dict()
         for vehicle_class in self.classes:
             class_totals[vehicle_class] = 0
