@@ -41,14 +41,10 @@ for customer in sales_customers:
     if invalid: continue
     survey_history = contains_customer(survey_customers, customer['customer_id'].values[0])
 
-    obj = metrics.Customer(sales_history, services_history, survey_history, start_time_ind, end_time_ind, start_time_dep, end_time_dep)
-    # FOR TESTING
-    # print(obj.summary)
+    obj = metrics.Customer(sales_history, services_history, survey_history, 
+        start_time_ind, end_time_ind, start_time_dep, end_time_dep, False)
     if obj.summary != None: customer_list.append(obj)
     i += 1
-    # FOR TESTING
-    #if i > 10:
-    #    break
 
 print(i, " customer objects successfully constructed and instantiated")
 
