@@ -5,8 +5,6 @@ from scipy.spatial.distance import cdist
 from sklearn.datasets import load_iris
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-
-%matplotlib inline
 import time
 import hashlib
 import scipy
@@ -16,13 +14,13 @@ from sklearn.datasets.samples_generator import make_blobs
 # https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.normalize.html 
 # Normalize data: pre-processing 
 
-def optimalK(data, nrefs=3, maxClusters=15):
+def optimalK(data, nrefs=3, maxClusters=10):
     # Determines optimal amount of clusters using gap statistic
     # https://anaconda.org/milesgranger/gap-statistic/notebook
 
-    gaps = np.zeros((len(range(1, maxClusters)),))
+    gaps = np.zeros((len(range(1, maxClusters+1)),))
     resultsdf = pd.DataFrame({'clusterCount':[], 'gap':[]})
-    for gap_index, k in enumerate(range(1, maxClusters)):
+    for gap_index, k in enumerate(range(1, maxClusters+1)):
         # Holder for reference dispersion results
         refDisps = np.zeros(nrefs)
         # For n references, generate random sample and perform kmeans getting resulting dispersion of each loop
@@ -46,31 +44,16 @@ def optimalK(data, nrefs=3, maxClusters=15):
 
     return (gaps.argmax() + 1, resultsdf)  # Plus 1 because index of 0 means 1 cluster is optimal, index 2 = 3 clusters are optimal
 
-    k, gapdf = optimalK(df, nrefs=3, maxClusters=15)
-	k
-
 def clusterKMeans(df, k):
     #turn df into np.array
     points = df.values
     # create kmeans object
-    kmeans = KMeans(n_clusters=k)
-    # fit kmeans object to data
-    kmeans.fit(df)
-    # print location of clusters learned by kmeans object
-    cluster_location = kmeans.cluster_centers_
+    kmeans = KMeans(n_clusters=k).fit(points)
     # save new clusters for chart - Assigns to every point what cluster it is in
     y_km = kmeans.fit_predict(points)
     # create a new dataframe 
-    dataframe = pd.DataFrame(list(points))
+    dataframe = pd.DataFrame(list(points), columns=df.columns)
     # append y_km to dataframe
     l = list(y_km)
-    dataframe['y_km'] = l 
-    
-    return print(dataframe)
-
-# Automatically run dataframe 
-array = # Insert array of datafram *df.values*
-
-k, gapdf = optimalK(array, nrefs=3, maxClusters=15)
-clusterKMeans(array, k)
-
+    dataframe['Cluster'] = l 
+    return [kmeans.score, dataframe]
