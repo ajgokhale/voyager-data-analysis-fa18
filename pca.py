@@ -7,6 +7,7 @@ import seaborn as sns
 import metrics
 from mpl_toolkits.mplot3d import Axes3D
 import math
+import pickle
 
 # PCA for data frames class
 class PCADF:
@@ -49,6 +50,8 @@ class PCADF:
         # Insert any design modifications here!
 
         plt.show()
+        fig = plt.figure()
+        return fig
 
     def plot_3d_pca(self, result, z_elevation=30, xy_azimuth=150):
         # df = dataframe
@@ -84,6 +87,8 @@ class PCADF:
         ax.set_title("PCA on the Data Set")
         ax.view_init(z_elevation, xy_azimuth)
         plt.show()
+        fig = plt.figure()
+        return fig
 
     def plot_3d_pca_360_animation(self, result, z_elevation=30):
         
@@ -144,11 +149,21 @@ pca_obj = PCADF(ind_df)
 
 # PCA in 2D
 df2d, pca2d = pca_obj.pca_2d()
-pca_obj.plot_2d_pca(df2d)
+np.save("output/pca2ddf.npy", df2d)
+o = open("output/pca2dobj.out", 'w+')
+pickle.dump(pca2d, o)
+o.close()
+fig2d = pca_obj.plot_2d_pca(df2d)
+fig2d.savefig("output/pca2dplot.png")
 
 # PCA in 3D
 df3d, pca3d = pca_obj.pca_3d()
-pca_obj.plot_3d_pca_360_animation(df3d, 30)
+np.save("output/pca3ddf.npy", df3d)
+o = open("output/pca3dobj.out", 'w+')
+pickle.dump(pca3d, o)
+o.close()
+fig3d = pca_obj.plot_3d(df3d)
+fig2d.savefig("output/pca3dplot.png")
 
 # return number of componenets needed for 95% of the variation in PCA to be accounted for
 num_comp = pca_obj.general_pca_num_components(0.95)
