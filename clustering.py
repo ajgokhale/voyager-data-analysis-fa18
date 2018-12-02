@@ -37,7 +37,7 @@ def plot_2dcluster(dataframe):
 	ax = fig.add_subplot(111)
 	df = dataframe
 	# Adding in a color-coded scatterplot to the grid
-	ax.scatter(df.ix[:, 0], df.iloc[:, 1], c = df.iloc[:, 2], s = 40, cmap = 'viridis')
+	ax.scatter(df.iloc[:, 0], df.iloc[:, 1], c = df.iloc[:, 2], s = 40, cmap = 'viridis')
 	plt.show()
 
 def plot_3dcluster(dataframe, z_elevation, xy_azimuth):
@@ -50,7 +50,7 @@ def plot_3dcluster(dataframe, z_elevation, xy_azimuth):
 	ax = fig.add_subplot(111, projection='3d')
 	df = dataframe
 	# Adding in color-coded scatterplot to the grid
-	ax.scatter(df.ix[:, 0], df.iloc[:, 1], df.iloc[:, 2], c = df.iloc[:, 3], s = 50, cmap = 'viridis') #Fun fact! With df.iloc[:, n] where n is an index, you can access any column in a dataframe using an index.  No need to know the names of the columns!
+	ax.scatter(df.iloc[:, 0], df.iloc[:, 1], df.iloc[:, 2], c = df.iloc[:, 3], s = 50, cmap = 'viridis') #Fun fact! With df.iloc[:, n] where n is an index, you can access any column in a dataframe using an index.  No need to know the names of the columns!
 	ax.view_init(z_elevation, xy_azimuth)
 	plt.show()
 
@@ -59,7 +59,7 @@ def plot_3dcluster_360(dataframe, z_elevation):
     ax = fig.add_subplot(111, projection='3d')
     df = dataframe
 	# Adding in color-coded scatterplot to the grid
-    ax.scatter(df.ix[:, 0], df.iloc[:, 1], df.iloc[:, 2], c = df.iloc[:, 3], s = 50, cmap = 'viridis')
+    ax.scatter(df.iloc[:, 0], df.iloc[:, 1], df.iloc[:, 2], c = df.iloc[:, 3], s = 50, cmap = 'viridis')
     for angle in range(0, 360):
         ax.view_init(z_elevation, angle)
         plt.draw()
@@ -77,9 +77,6 @@ for combo_3 in combos_3:
     clustered_3 = cluster.clusterKMeans(std_df_3, k_3)
     clustered_sets_3d.append(clustered_3)
     print('gottem')
-clustered_sets_3d.sort()
-for i in range(10):
-    plot_3dcluster(clustered_sets_3d[i][1], 30, 150)
 combos_2 = itertools.combinations(range(len((joined)[0])), 2)
 combos_2 = list(combos_2)
 clustered_sets_2d = []
@@ -91,6 +88,3 @@ for combo_2 in combos_2:
     clustered_2 = cluster.clusterKMeans(std_df_2, k_2)
     clustered_sets_2d.append(clustered_2)
     print('gettem')
-clustered_sets_2d.sort()
-for i in range(10):
-    plot_2dcluster(clustered_sets_2d[i][1], 30, 150)
