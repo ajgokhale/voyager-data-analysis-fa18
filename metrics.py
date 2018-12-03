@@ -370,8 +370,8 @@ class Customer:
     #Index reflecting consumer sentiment and buying intentions
     def calculate_mcsi_score(self):
         total = 0
-        for index in range(len(customer_history.values)):
-            date = customer_history['datetime'].values[index]
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
             month = encode_month(date)
             year = encode_year(date)
             total += self.mcsi.values.enumerate()[12 * (year - 2005) + (month - 9)]
