@@ -87,7 +87,7 @@ class Customer:
     @staticmethod
     def metric_names(allow_single):
         metric_list = ["Total Purchases", "Total Servicing Visits", "Maximum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(inactivity_years) + "-Year Inactivity Periods", ]
+            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(self.inactivity_years) + "-Year Inactivity Periods", ]
         if not allow_single:
             metric_list.extend(["Average Purchase Interval", "Average Change in Purchase","Recency Score", ])
         metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
