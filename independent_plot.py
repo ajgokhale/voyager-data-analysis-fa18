@@ -30,4 +30,4 @@ for i in range(len(metrics.Customer.metric_names(allow_single)) - 2):
     ax.set_title("Plot of " + metrics.Customer.metric_names(allow_single)[i] + " and Total Revenue")
     figi = plt.gcf()
     name = "Column" + str(i) + "andTotalRevenue"
-    figi.savefig("output/scatters/"+name, format='png')
+    figi.savefig("output/scatters/"+name+".png", format='png')
