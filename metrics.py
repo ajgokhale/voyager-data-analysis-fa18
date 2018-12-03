@@ -27,7 +27,7 @@ class Customer:
     "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
-    inactivity_years = 2
+    inactivity_years = 1
     inactivity_threshold = inactivity_years * 365
     #metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
     # "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
@@ -114,6 +114,22 @@ class Customer:
 ####################
 #SALES METRICS
 ####################
+    def total_revenue(self):
+        total = 0
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                total += self.customer_history['msrp'].values[index]
+        for index in range(len(self.service_history.values)):
+            date = self.service_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                purchase = self.service_history['amount_paid'].values[index]
+                if purchase > 0:
+                    total += purchase
+        return total
+
     def max_purchase(self):
         max_value = 0
         for index in range(len(self.customer_history.values)):
