@@ -18,8 +18,14 @@ allow_single = False
 x, y = read_data.customer_df(start_time_ind, end_time_ind, start_time_dep, end_time_dep,
     allow_single)
 
-#def valid_model(summary):
-
+def valid_model(model):
+    summary = model.summary()
+    print(model.pvalues)
+    if '[2]' in str(summary): return False
+    if len(model.pvalues) == 1: return False
+    for i in range(0, len(model.pvalues)):
+        if model.pvalues[i] > 0.1: return False
+    return True
 
 def ols(x, y, ind, dep):
     # perform linear regression
@@ -31,7 +37,7 @@ def ols(x, y, ind, dep):
     print("OLS performed successfully")
 
     # return table of stats
-    return model.summary()
+    return model
 
 def iterative_ols(x, y, mandatory_ind, optional_ind, deps):
     combos = all_combos(optional_ind)
@@ -40,9 +46,9 @@ def iterative_ols(x, y, mandatory_ind, optional_ind, deps):
     for iteration in combos:
         for dep in deps:
             metrics = mandatory_ind + list(iteration)
-            summary = ols(x, y, metrics, [dep])
-            if valid_model(summary):
-                summaries.append(summary)
+            model = ols(x, y, metrics, [dep])
+            if valid_model(model):
+                summaries.append(model.summary())
     return summaries
 
 def all_combos(lst):
