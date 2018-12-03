@@ -247,7 +247,7 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 contract = self.customer_history['contract_type'].values[index]
                 used = self.customer_history['trans_type']
-                if contract == "Retail" and used = "Pre-owned" or "USed" : num_used += 1
+                if contract == "Retail" and (used == "Pre-owned" or used == "Used") : num_used += 1
         return num_used
 
     def used_retail(self):
@@ -287,14 +287,8 @@ class Customer:
     #Number of household vehicles serviced within the last year
     #maybe wrong, this is total services used within a time interval
     def active_household_inventory(self):
-<<<<<<< HEAD
         return None
-=======
-        service_total = 0
-        for date in self.service_history['datetime'].values:
-            if date >= self.start and date < self.end:
-                service_total += 1
-        return service_total
+
 
     #amount of service charge vs total transaction sum
     def paid_service_proportion(self):
@@ -324,7 +318,6 @@ class Customer:
     #         return timeframe.days / 1.5
     #     else:
     #         return sum(differences)/(count - 1)
->>>>>>> dd2242bab5230eb5d870a6de78b9839046944dd4
 
 
 ############################
