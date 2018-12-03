@@ -53,7 +53,7 @@ class Customer:
         if allow_single: minimum = 0
         else: minimum = 1
         if self.total_trans > minimum and self.service_trans > minimum: #and allow_single:
-            if self.average_vehicle_interval() == 0:
+            if not allow_single and self.average_vehicle_interval() == 0:
                 self.summary = None
                 self.response = None
             else:
@@ -72,7 +72,7 @@ class Customer:
                 if not allow_single:
                     self.summary.extend([
                         self.average_vehicle_interval(), #9
-                        self.change_vehicle_spend(), #10
+                        abs(self.change_vehicle_spend()), #10
                         self.recency_score(), #11
                         ])
                 # reset the time period for dependent variables
@@ -91,7 +91,7 @@ class Customer:
             "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(Customer.inactivity_years) + "-Year Inactivity Periods",
             "Percentage of Retail Purchases", ]
         if not allow_single:
-            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase","Recency Score", ])
+            metric_list.extend(["Average Purchase Interval", "Average Absolute Change in Purchase","Recency Score", ])
         metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
         return np.asarray(metric_list)
 

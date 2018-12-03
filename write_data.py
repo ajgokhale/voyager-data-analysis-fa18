@@ -1,5 +1,5 @@
-def save_ols_results(results):
-	o = open("output/ols.out", 'w+')
+def save_ols_results(results, name):
+	o = open("output/ols/ols-" + name + ".out", 'w+')
 	for result in results:
-		o.write(str(result) + '\n')
+		o.write(result + '\n')
 	o.close()

@@ -11,7 +11,8 @@ import write_data
 # IMPORTANT: values for regression's start and end times (format: [M]M/[D]D/YYYY)
 start_time_ind, end_time_ind, start_time_dep, end_time_dep = \
     "1/1/2005", "1/1/2012", "1/1/2012", "1/1/2019"
-allow_single = False
+allow_single = True
+amortized = False
 
 #################################################
 
@@ -48,7 +49,7 @@ def iterative_ols(x, y, mandatory_ind, optional_ind, deps):
             metrics = mandatory_ind + list(iteration)
             model = ols(x, y, metrics, [dep])
             if valid_model(model):
-                summaries.append(model.summary())
+                summaries.append(str(metrics) + "\n"+ str(model.summary()) +"\n\n\n")
     return summaries
 
 def all_combos(lst):
@@ -61,7 +62,8 @@ def all_combos(lst):
 
 print("Running OLS...")
 mandatory_ind = []
-optional_ind = [0, 2, 6, 10]
+optional_ind = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+if not allow_single: optional_ind.extend([9,10,11])
 # selected_dep MUST be one element
 selected_dep = [0]
 # print(ols(x, y, selected_ind, selected_dep))
@@ -69,7 +71,10 @@ results = iterative_ols(x, y, mandatory_ind, optional_ind, selected_dep)
 #for summary in results:
 #    print(summary)
 
-write_data.save_ols_results(results)
+name = end_time_ind.split("/")[2]
+if allow_single: name += "-single"
+if amortized: name += "-amortized"
+write_data.save_ols_results(results, name)
 
 # if we eventually want predictions
 # predictions = model.predict(data_df)

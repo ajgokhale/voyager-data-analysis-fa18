@@ -10,7 +10,7 @@ def contains_customer(lst, customer_id):
             return customer, False
     return None, True
 
-def customers(start_time_ind, end_time_ind, start_time_dep, end_time_dep, allow_single):
+def customers(start_time_ind, end_time_ind, start_time_dep, end_time_dep, allow_single, amortized=False):
     # read in data as Pandas DataFrames
     sales = pd.read_csv('../data/salescsv.csv')
     services = pd.read_csv('../data/servicescsv.csv')
@@ -44,7 +44,9 @@ def customers(start_time_ind, end_time_ind, start_time_dep, end_time_dep, allow_
         i += 1
 
     print(i, " customer objects successfully constructed and instantiated")
-
+    if amortized:
+        for customer in customer_list:
+            print(vehicle_amortizing.exponential_decay(customer))
     return customer_list
 
 def customer_df(sti, eti, std, etd, allsin):

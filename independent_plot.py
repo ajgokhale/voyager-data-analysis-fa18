@@ -13,7 +13,7 @@ import metrics
 
 # IMPORTANT: values for regression's start and end times (format: [M]M/[D]D/YYYY)
 start_time_ind, end_time_ind, start_time_dep, end_time_dep = \
-    "1/1/2005", "1/1/2015", "1/1/2015", "1/1/2019"
+    "1/1/2005", "1/1/2012", "1/1/2012", "1/1/2019"
 allow_single = False
 
 #################################################
