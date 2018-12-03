@@ -41,7 +41,6 @@ def exponential_decay(customer):
 #https://leasehackr.com/calculator?make=Mercedes-Benz&msrp=50525&sales_price=44525&months=36&mf=.00109&dp=0&doc_fee=0&acq_fee=795&taxed_inc=0&untaxed_inc=0&rebate=0&resP=59&reg_fee=877&sales_tax=10&memo=WA%20State%20tax&monthlyTax_radio=true&miles=10000&msd=10
 #https://www.statista.com/statistics/453170/average-monthly-new-automobile-lease-payment-usa/
 #how leases are calculated: payment = depreciation + interest + tax
-#unsure what average lease is for luxury cars
 
 #average length 36 months
 #california ta ~8.5%
@@ -49,8 +48,8 @@ def exponential_decay(customer):
 #depreciation = (Capitalized Cost - Residual) ÷ Term of Lease
 #interest = (Capitalized Cost + Residual Value) × Money Factor
 #taxes = assuming california (Monthly Depreciation Cost + Interest) × Local Sales Tax Rate
-def lease_simulation(customer):
-    lease_payments = np.make_array()
+"""def lease_simulation(customer):
+    lease_payments = []
     for price in customer.customer_history['msrp'].values:
         depreciation = (price - 0)/36
         interest = (price + 0)*0.00109
@@ -60,18 +59,32 @@ def lease_simulation(customer):
             lease_payments.appened(monthly_pay)
             price = price-monthly_pay
     lease = pd.DataFrame({'lease_payments':lease_payments})
-    return lease
+    return lease"""
 
 #in a period of time frame
-def lease_simulation(customer, term_length):
-    lease_payments = make_array()
+def lease_simulation(customer, monthly_term_length):
+    lease_payments = []
     for price in customer.customer_history['msrp'].values:
-        depreciation = (price - 0)/36
-        interest = (price + 0)*0.00109
+        depreciation = (price)/36
+        interest = (price)*0.00109
         #taxes = (depreciation + interest)*0.085 uneeded does not add revenue
         monthly_pay = depreciation + interest
-        while term_length > 0:
-            lease_payments.appened(monthly_pay)
-            term_length -= 1
+        while monthly_term_length > 0:
+            lease_payments.append(monthly_pay)
+            monthly_term_length -= 1
     lease = pd.DataFrame({'lease_payments':lease_payments})
     return lease
+
+def lease_conversion(customer):
+    """Converts car MSRP to total amount paid by a lease over an average of 36 months."""
+    leases = 0
+    for index, row in customer.customer_history.iterrows():
+        date = metrics.encode_year(row['datetime'])
+        price = row['msrp']
+        contract = row['contract_type']
+        if contract == 'Lease':
+            depreciation = (price)/36
+            interest = (price)*0.00109
+            monthly_pay = depreciation + interest
+            leases += monthly_pay*36
+    return leases
