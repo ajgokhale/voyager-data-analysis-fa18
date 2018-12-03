@@ -66,13 +66,14 @@ class Customer:
                     self.distinct_classes(), #5
                     self.spend_per_service(), #6
                     self.aggregate_service_inactivity(self.inactivity_threshold), #7
+                    self.retail_purchases() / self.total_trans, #8
                 ]
                 # self.add_classes()
                 if not allow_single:
                     self.summary.extend([
-                        self.average_vehicle_interval(), #8
-                        self.change_vehicle_spend(), #9
-                        self.recency_score(), #10
+                        self.average_vehicle_interval(), #9
+                        self.change_vehicle_spend(), #10
+                        self.recency_score(), #11
                         ])
                 # reset the time period for dependent variables
                 self.start, self.end = encode_date(start_time_dep), encode_date(end_time_dep) 
@@ -86,8 +87,9 @@ class Customer:
             self.response = None
     @staticmethod
     def metric_names(allow_single):
-        metric_list = ["Total Purchases", "Total Servicing Visits", "Maximum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(Customer.inactivity_years) + "-Year Inactivity Periods", ]
+        metric_list = ["Total Purchases", "Total Servicing Visits", "Maximum Purchase", "Model & Purchase Month Disparity", "Total Retail Purchases",
+            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(Customer.inactivity_years) + "-Year Inactivity Periods",
+            "Percentage of Retail Purchases", ]
         if not allow_single:
             metric_list.extend(["Average Purchase Interval", "Average Change in Purchase","Recency Score", ])
         metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
