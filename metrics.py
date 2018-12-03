@@ -21,9 +21,13 @@ def encode_date(date_str):
     return date(int(date_lst[2]), int(date_lst[0]), int(date_lst[1]))
 
 class Customer:
-    classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
+    classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", 
+    "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", 
+    "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
+    inactivity_years = 2
+    inactivity_threshold = inactivity_years * 365
     #metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
     # "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
     
@@ -48,36 +52,43 @@ class Customer:
         if allow_single: minimum = 0
         else: minimum = 1
         if self.total_trans > minimum and self.service_trans > minimum: #and allow_single:
-            self.summary = [
-                self.max_purchase(),
-                self.min_purchase(),
-                self.model_purchase_gap(),
-                self.retail_purchases(),
-                self.distinct_classes(),
-                self.spend_per_service(),
-            ]
-            # self.add_classes()
-            if not allow_single:
-                self.summary.extend([
-                    self.average_vehicle_interval(),
-                    self.change_vehicle_spend(),
-                    ])
-            # reset the time period for dependent variables
-            self.start, self.end = encode_date(start_time_dep), encode_date(end_time_dep) 
-            # store dependent metrics in a "response" list
-            self.response = [
-                self.total_revenue(),
-                self.purchase_indicator()
-            ]
+            if self.average_vehicle_interval() == 0:
+                self.summary = None
+                self.response = None
+            else:
+                self.summary = [
+                    self.total_trans, #0
+                    self.service_trans, #1
+                    self.max_purchase(), #2
+                    self.model_purchase_gap(), #3
+                    self.retail_purchases(), #4
+                    self.distinct_classes(), #5
+                    self.spend_per_service(), #6
+                    self.aggregate_service_inactivity(self.inactivity_threshold), #7
+                ]
+                # self.add_classes()
+                if not allow_single:
+                    self.summary.extend([
+                        self.average_vehicle_interval(), #8
+                        self.change_vehicle_spend(), #9
+                        self.recency_score(), #10
+                        ])
+                # reset the time period for dependent variables
+                self.start, self.end = encode_date(start_time_dep), encode_date(end_time_dep) 
+                # store dependent metrics in a "response" list
+                self.response = [
+                    self.total_revenue(),
+                    self.purchase_indicator()
+                ]
         else:
             self.summary = None
             self.response = None
     @staticmethod
     def metric_names(allow_single):
-        metric_list = ["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction",]
+        metric_list = ["Total Purchases", "Total Servicing Visits", "Maximum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
+            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(inactivity_years) + "-Year Inactivity Periods", ]
         if not allow_single:
-            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase",])
+            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase","Recency Score", ])
         metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
         return np.asarray(metric_list)
 
@@ -121,6 +132,13 @@ class Customer:
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
                 total += self.customer_history['msrp'].values[index]
+        # for index in range(len(self.service_history.values)):
+        #     date = self.service_history['datetime'].values[index]
+        #     encoded = encode_date(date)
+        #     if encoded >= self.start and encoded < self.end:
+        #         purchase = self.service_history['amount_paid'].values[index]
+        #         if purchase > 0:
+        #             total += purchase
         return total
 
     # Need to confirm this is correct
@@ -175,8 +193,11 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 service = self.service_history['amount_paid'].values[index]
                 #warranty = self.service_history['amount_warranty'].values[index]
-                service_paid = service# + warranty
-                service_num += 1
+                if service > 0:
+                    service_paid += service
+                    service_num += 1
+        if service_num == 0:
+            return 0
         return service_paid/service_num
 
         #Total number of X-class vehicles purchased
@@ -194,41 +215,10 @@ class Customer:
         return class_totals
 
 
-#############################
-
     #Number of household vehicles serviced within the last year
     #maybe wrong, this is total services used within a time interval
     def active_household_inventory(self):
-        service_total = 0
-        for date in self.service_history['datetime'].values:
-            if date >= self.start and date < self.end:
-                service_total += 1
-        return service_total
-
-############################
-############################
-
-    #Average amount of time between individual vehicle purchases
-    #How did we say we were doing datetime?
-    # def average_vehicle_interval(self):
-    #     count = 0
-    #     holder = list()
-    #     differences = list()
-    #     for index in range(len(self.customer_history.values)):
-    #         date = self.customer_history['datetime'].values[index]
-    #         encoded = encode_date(date)
-    #         if encoded >= self.start and encoded < self.end:
-    #             holder.append(encoded)
-    #             count +=1
-    #     holder.sort()
-    #     for i in range(len(holder) - 1):
-    #         delta = holder[i+1]-holder[i]
-    #         differences.append(delta.days)
-    #     if count == 1:
-    #         timeframe = self.end - self.start
-    #         return timeframe.days / 1.5
-    #     else:
-    #         return sum(differences)/(count - 1)
+        return None
 
 #Average difference between successive vehicle purchase MSRPs
     def change_vehicle_spend(self):
@@ -269,20 +259,21 @@ class Customer:
 
     #Ratio of time since last purchase versus average purchase interval
     def recency_score(self):
+        date = encode_date(self.customer_history['datetime'].values[0])
         last_purchase_date = date.min
         today = date.today()
-        average_interval = self.average_vehicle_interval(self.start, self.end)
+        average_interval = self.average_vehicle_interval()
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if date >= self.start and date < self.end:
+            if encoded >= self.start and encoded < self.end:
                 last_purchase_date = max(last_purchase_date, encoded)
-        return (today - last_purchase_date)/average_interval
+        return (today - last_purchase_date).days/average_interval
 
 ############################
 ############################
 
-    #Number of intervals between servicing transactions that exceed X years
+    #Number of intervals between servicing transactions that exceed X days
     def aggregate_service_inactivity(self, x_days):
         holder = list()
         differences = list()

@@ -63,7 +63,8 @@ def customer_df(sti, eti, std, etd, allsin):
     dependent_variables = []
     for customer in customer_list:
         valid = True
-        for element in customer.summary:
+        for index in range(len(customer.summary)):
+            element = customer.summary[index]
             if math.isnan(element) or math.isinf(element):
                 valid = False
         for element in customer.response:
