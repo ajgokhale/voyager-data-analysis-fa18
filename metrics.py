@@ -345,14 +345,14 @@ class Customer:
     def recency_score(self):
         date = encode_date(self.customer_history['datetime'].values[0])
         last_purchase_date = date.min
-        today = date.today()
+        day = encode_date("1/1/2012")
         average_interval = self.average_vehicle_interval()
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
                 last_purchase_date = max(last_purchase_date, encoded)
-        return (today - last_purchase_date).days/average_interval
+        return (day - last_purchase_date).days/average_interval
 
 ############################
 ############################
