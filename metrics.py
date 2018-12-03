@@ -4,6 +4,7 @@ import pandas as pd
 
 import statsmodels.api as sm
 import math
+import vehicle_amortizing
 
 from datetime import date
 
@@ -21,22 +22,26 @@ def encode_date(date_str):
     return date(int(date_lst[2]), int(date_lst[0]), int(date_lst[1]))
 
 class Customer:
-    classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
+    classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", 
+    "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", 
+    "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
+    inactivity_years = 2
+    inactivity_threshold = inactivity_years * 365
     #metric_names = np.asarray(["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
     # "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total Revenue", "Vehicle Purchase Indicator"])
-    
+
     # when the Customer object is instantiated, all its information will be calculated automatically
-    
+
     def __init__(self, sales_history, service_history, survey_history,
             start_time_ind, end_time_ind, start_time_dep, end_time_dep,
             allow_single=True):
-        
+
         self.customer_history = sales_history
         self.service_history = service_history
         self.survey_history = survey_history
-        
+
         # set the time period for which metrics are being calculated, start_time_ind/end_time_ind
         # is the time period for independent variables
         self.start = encode_date(start_time_ind)
@@ -48,36 +53,43 @@ class Customer:
         if allow_single: minimum = 0
         else: minimum = 1
         if self.total_trans > minimum and self.service_trans > minimum: #and allow_single:
-            self.summary = [
-                self.max_purchase(),
-                self.min_purchase(),
-                self.model_purchase_gap(),
-                self.retail_purchases(),
-                self.distinct_classes(),
-                self.spend_per_service(),
-            ]
-            # self.add_classes()
-            if not allow_single:
-                self.summary.extend([
-                    self.average_vehicle_interval(),
-                    self.change_vehicle_spend(),
-                    ])
-            # reset the time period for dependent variables
-            self.start, self.end = encode_date(start_time_dep), encode_date(end_time_dep) 
-            # store dependent metrics in a "response" list
-            self.response = [
-                self.total_revenue(),
-                self.purchase_indicator()
-            ]
+            if self.average_vehicle_interval() == 0:
+                self.summary = None
+                self.response = None
+            else:
+                self.summary = [
+                    self.total_trans, #0
+                    self.service_trans, #1
+                    self.max_purchase(), #2
+                    self.model_purchase_gap(), #3
+                    self.retail_purchases(), #4
+                    self.distinct_classes(), #5
+                    self.spend_per_service(), #6
+                    self.aggregate_service_inactivity(self.inactivity_threshold), #7
+                ]
+                # self.add_classes()
+                if not allow_single:
+                    self.summary.extend([
+                        self.average_vehicle_interval(), #8
+                        self.change_vehicle_spend(), #9
+                        self.recency_score(), #10
+                        ])
+                # reset the time period for dependent variables
+                self.start, self.end = encode_date(start_time_dep), encode_date(end_time_dep) 
+                # store dependent metrics in a "response" list
+                self.response = [
+                    self.total_revenue(),
+                    self.purchase_indicator()
+                ]
         else:
             self.summary = None
             self.response = None
     @staticmethod
     def metric_names(allow_single):
-        metric_list = ["Maximum Purchase", "Minimum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
-            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction",]
+        metric_list = ["Total Purchases", "Total Servicing Visits", "Maximum Purchase", "Model & Purchase Year Disparity", "Percentage of Retail Purchases",
+            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(inactivity_years) + "-Year Inactivity Periods", ]
         if not allow_single:
-            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase",])
+            metric_list.extend(["Average Purchase Interval", "Average Change in Purchase","Recency Score", ])
         metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
         return np.asarray(metric_list)
 
@@ -98,6 +110,10 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 service_total += 1
         return total, service_total
+
+####################
+#SALES METRICS
+####################
     def max_purchase(self):
         max_value = 0
         for index in range(len(self.customer_history.values)):
@@ -114,13 +130,21 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 min_value = min(self.customer_history['msrp'].values[index], min_value)
         return min_value
-    def total_revenue(self):
+
+    def total_sales_revenue(self):
         total = 0
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
                 total += self.customer_history['msrp'].values[index]
+        # for index in range(len(self.service_history.values)):
+        #     date = self.service_history['datetime'].values[index]
+        #     encoded = encode_date(date)
+        #     if encoded >= self.start and encoded < self.end:
+        #         purchase = self.service_history['amount_paid'].values[index]
+        #         if purchase > 0:
+        #             total += purchase
         return total
 
     # Need to confirm this is correct
@@ -138,6 +162,9 @@ class Customer:
         return sum_of_diff / self.total_trans
 
     def distinct_classes(self):
+        """Returns the number of distinct car classes the customer owns, E.g. if
+        a customer owns 2 M class cars and 3 GLA class cars, distinct_classes
+        will return 2."""
         classes = set()
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
@@ -155,7 +182,7 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 contract = self.customer_history['contract_type'].values[index]
                 if contract == "Retail": num_retail += 1
-        return num_retail / self.total_trans
+        return num_retail
 
     def purchase_indicator(self):
         if self.total_trans != 0:
@@ -163,6 +190,72 @@ class Customer:
         else:
             return 0
 
+    def total_class_purchase(self):
+        """Returns a dictionary where each key is the name of a class and
+        the value is the total number of X-class purchased."""
+        class_totals = dict()
+        for vehicle_class in self.classes:
+            class_totals[vehicle_class] = 0
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                model = self.customer_history['model_class'].values[index]
+                class_totals.update({model: class_totals.get(model) + 1})
+        return class_totals
+
+#Average difference between successive vehicle purchase MSRPs
+    def change_vehicle_spend(self):
+        """Returns the average difference in spend between each successive
+        vehicle purchase."""
+        holder = list()
+        differences = list()
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                msrp = self.customer_history['msrp'].values[index]
+                holder.append((encoded, msrp))
+        holder.sort(key=lambda x: x[0])
+        for i in range(len(holder) - 1):
+            diff = holder[i+1][1]-holder[i][1]
+            differences.append(diff)
+        return sum(differences) / (len(holder) - 1)
+
+    def average_vehicle_interval(self):
+        """Returns the average amount of time between each vehicle purchase."""
+        count = 0
+        holder = list()
+        differences = list()
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                holder.append(encoded)
+                count +=1
+        holder.sort()
+        for i in range(len(holder) - 1):
+            delta = holder[i+1]-holder[i]
+            differences.append(delta.days)
+        return sum(differences)/(len(holder) - 1)
+
+    def used_purchases(self):
+        num_used = 0
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                contract = self.customer_history['contract_type'].values[index]
+                used = self.customer_history['trans_type']
+                if contract == "Retail" and used = "Pre-owned" or "USed" : num_used += 1
+        return num_used
+
+    def used_retail(self):
+        return used_purchases(self)/retail_purchases(self)
+
+#######################
+#SERVICE METRICS
+#######################
 
     #Average amount spent on each servicing transaction
     def spend_per_service(self):
@@ -175,35 +268,37 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 service = self.service_history['amount_paid'].values[index]
                 #warranty = self.service_history['amount_warranty'].values[index]
-                service_paid = service# + warranty
-                service_num += 1
+                if service > 0:
+                    service_paid += service
+                    service_num += 1
+        if service_num == 0:
+            return 0
         return service_paid/service_num
 
-        #Total number of X-class vehicles purchased
-    #dictionary for each X-class. kinda clunky but should work
-    def total_class_purchase(self):
-        class_totals = dict()
-        for vehicle_class in self.classes:
-            class_totals[vehicle_class] = 0
-        for index in range(len(self.customer_history.values)):
+    def total_service_revenue(self):
+        total = 0
+        for index in range(len(self.service_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
-                model = self.customer_history['model_class'].values[index]
-                class_totals.update({model: class_totals.get(model) + 1})
-        return class_totals
-
-
-#############################
+                total += self.service_history['amount_paid'].values[index]
+        return total
 
     #Number of household vehicles serviced within the last year
     #maybe wrong, this is total services used within a time interval
     def active_household_inventory(self):
+<<<<<<< HEAD
+        return None
+=======
         service_total = 0
         for date in self.service_history['datetime'].values:
             if date >= self.start and date < self.end:
                 service_total += 1
         return service_total
+
+    #amount of service charge vs total transaction sum
+    def paid_service_proportion(self):
+        return self.total_service_revenue/self.total_sales_revenue
 
 ############################
 ############################
@@ -229,39 +324,7 @@ class Customer:
     #         return timeframe.days / 1.5
     #     else:
     #         return sum(differences)/(count - 1)
-
-#Average difference between successive vehicle purchase MSRPs
-    def change_vehicle_spend(self):
-        holder = list()
-        differences = list()
-        for index in range(len(self.customer_history.values)):
-            date = self.customer_history['datetime'].values[index]
-            encoded = encode_date(date)
-            if encoded >= self.start and encoded < self.end:
-                msrp = self.customer_history['msrp'].values[index]
-                holder.append((encoded, msrp))
-        holder.sort(key=lambda x: x[0])
-        for i in range(len(holder) - 1):
-            diff = holder[i+1][1]-holder[i][1]
-            differences.append(diff)
-        return sum(differences) / (len(holder) - 1)
-
-    def average_vehicle_interval(self):
-        count = 0
-        holder = list()
-        differences = list()
-        for index in range(len(self.customer_history.values)):
-            date = self.customer_history['datetime'].values[index]
-            encoded = encode_date(date)
-            if encoded >= self.start and encoded < self.end:
-                holder.append(encoded)
-                count +=1
-        holder.sort()
-        for i in range(len(holder) - 1):
-            delta = holder[i+1]-holder[i]
-            differences.append(delta.days)
-
-        return sum(differences)/(len(holder) - 1)
+>>>>>>> dd2242bab5230eb5d870a6de78b9839046944dd4
 
 
 ############################
@@ -269,20 +332,21 @@ class Customer:
 
     #Ratio of time since last purchase versus average purchase interval
     def recency_score(self):
+        date = encode_date(self.customer_history['datetime'].values[0])
         last_purchase_date = date.min
         today = date.today()
-        average_interval = self.average_vehicle_interval(self.start, self.end)
+        average_interval = self.average_vehicle_interval()
         for index in range(len(self.customer_history.values)):
             date = self.customer_history['datetime'].values[index]
             encoded = encode_date(date)
-            if date >= self.start and date < self.end:
+            if encoded >= self.start and encoded < self.end:
                 last_purchase_date = max(last_purchase_date, encoded)
-        return (today - last_purchase_date)/average_interval
+        return (today - last_purchase_date).days/average_interval
 
 ############################
 ############################
 
-    #Number of intervals between servicing transactions that exceed X years
+    #Number of intervals between servicing transactions that exceed X days
     def aggregate_service_inactivity(self, x_days):
         holder = list()
         differences = list()
