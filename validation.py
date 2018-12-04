@@ -26,7 +26,19 @@ def accuracy(actual, predicted):
             accurate += 1
     return accurate / len(actual)
 
-def kfolds(regression_results, x_indices, y_index, k):
+def x_s(exog_names):
+    indices = []
+    for elem in exog_names:
+        if elem[0] == 'x':
+            indices.append(int(elem[1]))
+    return indices
+
+def y_s(endog_names):
+    return int(endog_names[0][1])
+
+def kfolds(regression_results, k):
+    x_indices = x_s(regression_results.model.exog_names)
+    y_index = y_s(regression_results.model.endog_names)
     new_x = np.zeros(len(x))
     for x_index in x_indices:
         new_x = np.concatenate(new_x, x[:, x_index], axis=1)
