@@ -9,21 +9,100 @@ import metrics
 #2006, new: 52 mo, used: 38 mo
 #2016 new: 79 mo, used: 66 mo ~7 years for new
 
-
+mercedes_coeff = 67/79
+money_factor = 0.0019
 
 #distribute the cost of a vehicle annually over average length of ownership
 
-def uniform_decay(customer):
-    prices = []
-    for index, row in customer.customer_history.iterrows():
-        date = metrics.encode_year(row['datetime'])
-        decay_length = (date - 2006)*2.7+52
-        price = row['msrp']
-        per_year = (price/decay_length)*12 #annual "payment"
-        for i in np.arange(decay_length//12):
-            prices.append(per_year)
-    df = pd.DataFrame({'prices':prices})
-    return df
+def modify_year(date, year):
+    values = date.split("/")
+    return values[0] + "/" + values[1] + "/" + str(year)
+
+def calculate_real_price(price, year, row):
+    depreciation_time = year - (row['model_year'] - 1)
+
+    depreciation_3yr = \
+        1 - metrics.Customer.depreciation_mapping[row['model_class']]
+    depreciation = math.pow(depreciation_3yr, 0.33)
+
+    return price * math.pow(depreciation, depreciation_time)
+
+def uniform_distribution(customer_history, row):
+    raw_date = row['datetime']
+    year = metrics.encode_year(raw_date)
+    decay_length = mercedes_coeff*((year - 2006)*2.7+52)
+    price = row['msrp']
+    price = calculate_real_price(price, year, row)
+    num_years = decay_length // 12
+    per_year = price / num_years # annual "payment"
+    for i in range(int(num_years)):
+        new_row = row.copy()
+        dummy_year = year + i
+        dummy_year = modify_year(raw_date, dummy_year)
+        new_row.datetime = dummy_year
+        new_row.msrp = per_year
+        customer_history = customer_history.append(new_row, ignore_index=True)
+    return customer_history
+
+def account_depreciation(customer_history, row):
+    raw_date = row['datetime']
+    year = metrics.encode_year(raw_date)
+    price = row['msrp']
+    price = calculate_real_price(price, year, row)
+    new_row = row.copy()
+    new_row.msrp = price
+    customer_history = customer_history.append(new_row, ignore_index=True)
+    return customer_history
+
+# def lease_conversion(customer_history, row):
+#     raw_date = row['datetime']
+#     year = metrics.encode_year(raw_date)
+#     price = row['msrp']
+#     price = calculate_real_price(price, year, row)
+#     num_years = 3
+#     residual = price*(1 - metrics.Customer.depreciation_mapping[row['model_class']])
+#     depreciation = price - residual
+#     per_year = (price + residual) * money_factor * 12 + \
+#         (depreciation / num_years)
+#     for i in range(int(num_years)):
+#         new_row = row.copy()
+#         dummy_year = year + i
+#         dummy_year = modify_year(raw_date, dummy_year)
+#         new_row.datetime = dummy_year
+#         new_row.msrp = per_year
+#         customer_history = customer_history.append(new_row, ignore_index=True)
+#     return customer_history
+
+def lease_conversion(customer_history, row):
+    raw_date = row['datetime']
+    year = metrics.encode_year(raw_date)
+    price = row['msrp']
+    price = calculate_real_price(price, year, row)
+    residual = price*(1 - metrics.Customer.depreciation_mapping[row['model_class']])
+    depreciation = price - residual
+    total_lease = (price + residual) * money_factor * 36 + \
+        depreciation
+    new_row = row.copy()
+    new_row.msrp = total_lease
+    customer_history = customer_history.append(new_row, ignore_index=True)
+    return customer_history
+
+def amortize(customer_history):
+    rows_to_remove = []
+    ind = 0
+    for index, row in customer_history.iterrows():
+        #rows_to_remove.append(ind)
+        if row['contract_type'] == "Retail":
+            rows_to_remove.append(ind)
+            #customer_history = uniform_distribution(customer_history, row)
+            customer_history = account_depreciation(customer_history, row)
+        elif row['contract_type'] == "Lease":
+            rows_to_remove.append(ind)
+            customer_history = lease_conversion(customer_history, row)
+        ind += 1
+    customer_history = customer_history.drop(rows_to_remove)
+    return customer_history
+
 
 #A = Pe^rt t=7 years, r=depreciation, P = MSRP
 def exponential_decay(customer):
@@ -75,7 +154,7 @@ def lease_simulation(customer, monthly_term_length):
     lease = pd.DataFrame({'lease_payments':lease_payments})
     return lease
 
-def lease_conversion(customer):
+def lease_conversion_old(customer):
     """Converts car MSRP to total amount paid by a lease over an average of 36 months."""
     leases = 0
     for index, row in customer.customer_history.iterrows():

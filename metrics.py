@@ -4,7 +4,7 @@ import pandas as pd
 
 import statsmodels.api as sm
 import math
-import vehicle_amortizing
+import amortizing
 
 from datetime import date
 
@@ -18,13 +18,45 @@ def encode_month(date_str):
     return int(date[0]) + int(date[2])*12
 def encode_date(date_str):
     date_lst = date_str.split('/')
-    #return (int(date[0]) - 1)*31 + (int(date[1]) - 1) + int(date[2])*372
+    if date_lst[0] == '2' and date_lst[1] == '29':
+        date_lst[1] = '28'
     return date(int(date_lst[2]), int(date_lst[0]), int(date_lst[1]))
 
 class Customer:
     classes = ["CL ", "GL ", "C  ", "R  ", "GLE", "M  ", "B  ", 
     "CLA", "CLK", "E  ", "CLS", "GLA", "GLC", "GLK", "GLS", "S  ", 
-    "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  "]
+    "SL ", "SLK", "SLS", "SMT", "SPR", "SLR", "G  ", "SLC", "MET",
+    "GT "]
+    class_depreciation = [
+        0.35,#CL (approx)
+        0.41,#GL (approx)
+        0.13,#C
+        0.91,#R
+        0.38,#GLE
+        0.26,#M
+        0.28,#B
+        0.17,#CLA
+        0.41,#CLK
+        0.55,#E
+        0.48,#CLS
+        0.45,#GLA
+        0.48,#GLC
+        0.41,#GLK (approx)
+        0.34,#GLS
+        0.34,#S
+        0.44,#SL
+        0.20,#SLK
+        0.96,#SLS
+        0.66,#SMT (approx)
+        0.78,#SPR
+        0.43,#SLR
+        0.31,#G (approx)
+        0.33,#SLC
+        0.78,#MET (approx)
+        0.34,#GT
+    ]
+    # Source: https://www.themoneycalculator.com/vehicle-finance/calculators/car-depreciation-by-make-and-model/MERCEDES-BENZ/
+    depreciation_mapping = dict(zip(classes, class_depreciation))
     release_month = 6 # the month at which next year's model is released (ex: 2018 model releases in June 2017)
     mcsi = pd.read_csv('mcsi.csv')
     inactivity_years = 1
@@ -36,8 +68,7 @@ class Customer:
 
     def __init__(self, sales_history, service_history, survey_history,
             start_time_ind, end_time_ind, start_time_dep, end_time_dep,
-            allow_single=True):
-
+            allow_single=True, amortized=False):
         self.customer_history = sales_history
         self.service_history = service_history
         self.survey_history = survey_history
@@ -57,6 +88,7 @@ class Customer:
                 self.summary = None
                 self.response = None
             else:
+                if amortized: self.customer_history = amortizing.amortize(self.customer_history)
                 self.summary = [
                     self.total_trans, #0
                     self.service_trans, #1
@@ -67,17 +99,19 @@ class Customer:
                     self.spend_per_service(), #6
                     self.aggregate_service_inactivity(self.inactivity_threshold), #7
                     self.retail_purchases() / self.total_trans, #8
+                    self.percent_used(), #9
                 ]
                 # self.add_classes()
                 if not allow_single:
                     self.summary.extend([
-                        self.average_vehicle_interval(), #9
-                        abs(self.change_vehicle_spend()), #10
-                        self.recency_score(), #11
+                        self.average_vehicle_interval(), #10
+                        abs(self.change_vehicle_spend()), #11
+                        self.recency_score(), #12
                         ])
                 # reset the time period for dependent variables
                 self.start, self.end = encode_date(start_time_dep), encode_date(end_time_dep) 
                 # store dependent metrics in a "response" list
+                
                 self.response = [
                     self.total_revenue(),
                     self.purchase_indicator()
@@ -87,11 +121,24 @@ class Customer:
             self.response = None
     @staticmethod
     def metric_names(allow_single):
-        metric_list = ["Total Purchases", "Total Servicing Visits", "Maximum Purchase", "Model & Purchase Month Disparity", "Total Retail Purchases",
-            "Number of Distinct Vehicle Classes Purchased", "Average Service Transaction", "Total " + str(Customer.inactivity_years) + "-Year Inactivity Periods",
-            "Percentage of Retail Purchases", ]
+        metric_list = [
+            "Total Purchases",
+            "Total Servicing Visits", 
+            "Maximum MSRP", 
+            "Model & Purchase Month Disparity", 
+            "Total Retail Purchases",
+            "Number of Distinct Vehicle Classes Purchased", 
+            "Average Service Transaction", 
+            "Total " + str(Customer.inactivity_years) + "-Year Inactivity Periods",
+            "Percentage of Retail Purchases", 
+            "Percentage of Used Purchases or Leases",
+        ]
         if not allow_single:
-            metric_list.extend(["Average Purchase Interval", "Average Absolute Change in Purchase","Recency Score", ])
+            metric_list.extend([
+                "Average Purchase Interval", 
+                "Average Absolute Change in Purchase",
+                "Recency Score", 
+            ])
         metric_list.extend(["Total Revenue", "Vehicle Purchase Indicator",])
         return np.asarray(metric_list)
 
@@ -131,6 +178,17 @@ class Customer:
                 if purchase > 0:
                     total += purchase
         return total
+
+    def percent_used(self):
+        used_total = 0
+        for index in range(len(self.customer_history.values)):
+            date = self.customer_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                trans_type = self.customer_history['trans_type'].values[index]
+                if trans_type == "Used" or trans_type == "Pre-owned":
+                    used_total += 1
+        return used_total / self.total_trans
 
     def max_purchase(self):
         max_value = 0
