@@ -11,6 +11,7 @@ start_time_ind, end_time_ind, start_time_dep, end_time_dep = \
     "1/1/2005", "1/1/2014", "1/1/2014", "1/1/2019"
 allow_single = True
 amortized = True
+k_value = 10 # number of folds
 
 #################################################
 
@@ -57,3 +58,9 @@ def kfolds(regression_results, k):
 # AIC - returns a score that measures goodness of fit and "simplicity," lower values are better
 def aic(regression_results):
     return regression_results.aic()
+
+# Running validation
+validation_list = []
+for result in ols.results:
+    validation_list.append([kfolds(result, k_value), aic(result), x_s(result.model.exog_names), y_s(result.model.endog_names)])
+write_data.save_validation(validation_list)
