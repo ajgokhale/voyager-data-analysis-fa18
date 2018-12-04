@@ -35,9 +35,9 @@ def kfolds(regression_results, x_indices, y_index, k):
     accuracy_sum = 0
     for i in range(k):
         k_x = new_x[(i * fold_size):((i + 1) * fold_size)]
-        k_x = new_y[(i * fold_size):((i + 1) * fold_size)]
+        k_y = new_y[(i * fold_size):((i + 1) * fold_size)]
         rest_x = np.vstack([new_x[0:(i * fold_size)], new_x[((i + 1) * fold_size):len(new_x)]])
-        rest_x = np.vstack([new_y[0:(i * fold_size)], new_y[((i + 1) * fold_size):len(new_y)]])
+        rest_y = np.vstack([new_y[0:(i * fold_size)], new_y[((i + 1) * fold_size):len(new_y)]])
         k_x = sm.add_constant(k_x)
         accuracy_sum += accuracy(k_y, sm.OLS(rest_y, rest_x).fit().fitted_values())
     return accuracy_sum / k
