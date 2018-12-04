@@ -109,6 +109,3 @@ curr_time = curr_time.split(".")[0]
 curr_time = curr_time.replace(":", "-")
 name += '-' + curr_time
 write_data.save_ols_results(results, name)
-
-# if we eventually want predictions
-# predictions = model.predict(data_df)
