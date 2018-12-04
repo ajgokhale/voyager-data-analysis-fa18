@@ -14,7 +14,7 @@ from   scipy.stats import pearsonr
 
 # IMPORTANT: values for regression's start and end times (format: [M]M/[D]D/YYYY)
 start_time_ind, end_time_ind, start_time_dep, end_time_dep = \
-    "1/1/2005", "1/1/2015", "1/1/2015", "1/1/2019"
+    "1/1/2005", "1/1/2014", "1/1/2014", "1/1/2019"
 allow_single = True
 amortized = True
 
@@ -57,7 +57,8 @@ def iterative_ols(x, y, mandatory_ind, optional_ind, deps):
             model = ols(x, y, metrics, [dep])
             if valid_model(model):
                 model_results.append((model, metrics, model.rsquared))
-    model_results.sort(key=lambda x: -x[2])
+    #model_results.sort(key=lambda x: -x[2])
+    model_results.sort(key=lambda x: -len(x[0].pvalues))
     for model in model_results:
         metrics = model[1]
         model = model[0]
@@ -94,8 +95,8 @@ input("Continue?")
 
 print("Running OLS...")
 mandatory_ind = []
-optional_ind = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,]# 5, 6, 7,]
-if not allow_single: optional_ind.extend([10, 11, 12, ])
+optional_ind = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10]# 5, 6, 7,]
+if not allow_single: optional_ind.extend([11, 12,13 ])
 
 selected_dep = [0]
 results = iterative_ols(x, y, mandatory_ind, optional_ind, selected_dep)

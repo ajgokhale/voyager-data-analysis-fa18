@@ -80,15 +80,17 @@ class Customer:
         # save the time period for dependent variables
         # calculate total number of transactions a customer has made (helps for calculating other metrics)
         self.total_trans, self.service_trans = self.total_transactions()
+        self.tot_rev = self.total_revenue()
         # store behavioral metrics in a "summary" list
         if allow_single: minimum = 0
         else: minimum = 1
-        if self.total_trans > minimum and self.service_trans > minimum: #and allow_single:
+        if self.total_trans > minimum and self.service_trans > minimum and (self.tot_rev > 0): #and allow_single:
             if not allow_single and self.average_vehicle_interval() == 0:
                 self.summary = None
                 self.response = None
             else:
                 if amortized: self.customer_history = amortizing.amortize(self.customer_history)
+                self.tot_rev = self.total_revenue()
                 self.summary = [
                     self.total_trans, #0
                     self.service_trans, #1
@@ -100,6 +102,7 @@ class Customer:
                     self.aggregate_service_inactivity(self.inactivity_threshold), #7
                     self.retail_purchases() / self.total_trans, #8
                     self.percent_used(), #9
+                    self.max_service(), #10
                 ]
                 # self.add_classes()
                 if not allow_single:
@@ -113,8 +116,8 @@ class Customer:
                 # store dependent metrics in a "response" list
                 
                 self.response = [
-                    self.total_revenue(),
-                    self.purchase_indicator()
+                    self.tot_rev,
+                    self.purchase_indicator(),
                 ]
         else:
             self.summary = None
@@ -132,6 +135,7 @@ class Customer:
             "Total " + str(Customer.inactivity_years) + "-Year Inactivity Periods",
             "Percentage of Retail Purchases", 
             "Percentage of Used Purchases or Leases",
+            "Maximum Service Transaction", 
         ]
         if not allow_single:
             metric_list.extend([
@@ -197,6 +201,18 @@ class Customer:
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
                 max_value = max(self.customer_history['msrp'].values[index], max_value)
+        return max_value
+
+    def max_service(self):
+        max_value = 0
+        for index in range(len(self.service_history.values)):
+            date = self.service_history['datetime'].values[index]
+            encoded = encode_date(date)
+            if encoded >= self.start and encoded < self.end:
+                max_value = max(self.service_history['amount_paid'].values[index], max_value)
+
+        if max_value < 0: return 0
+        if max_value > 80000: return 0
         return max_value
     def min_purchase(self):
         min_value = float('inf')
@@ -349,6 +365,7 @@ class Customer:
                     service_num += 1
         if service_num == 0:
             return 0
+        if service_paid/service_num > 80000: return 0
         return service_paid/service_num
 
     def total_service_revenue(self):
