@@ -1,0 +1,31 @@
+[4, 5, 9]
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                      y   R-squared:                       0.018
+Model:                            OLS   Adj. R-squared:                  0.016
+Method:                 Least Squares   F-statistic:                     11.64
+Date:                Tue, 04 Dec 2018   Prob (F-statistic):           1.46e-07
+Time:                        23:45:39   Log-Likelihood:                -18229.
+No. Observations:                1950   AIC:                         3.647e+04
+Df Residuals:                    1946   BIC:                         3.649e+04
+Df Model:                           3                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const        302.9118    161.997      1.870      0.062     -14.795     620.618
+x1           411.8017     94.011      4.380      0.000     227.429     596.174
+x2           178.9464    126.172      1.418      0.156     -68.500     426.393
+x3           -37.0890    145.840     -0.254      0.799    -323.109     248.931
+==============================================================================
+Omnibus:                     2018.024   Durbin-Watson:                   2.036
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):           101769.657
+Skew:                           5.162   Prob(JB):                         0.00
+Kurtosis:                      36.852   Cond. No.                         6.44
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+

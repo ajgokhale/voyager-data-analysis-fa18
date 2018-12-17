@@ -1,0 +1,32 @@
+[4, 5, 7, 9]
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                      y   R-squared:                       0.133
+Model:                            OLS   Adj. R-squared:                  0.131
+Method:                 Least Squares   F-statistic:                     74.43
+Date:                Tue, 04 Dec 2018   Prob (F-statistic):           9.05e-59
+Time:                        23:45:54   Log-Likelihood:                -23717.
+No. Observations:                1950   AIC:                         4.744e+04
+Df Residuals:                    1945   BIC:                         4.747e+04
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const       -733.6395   2765.550     -0.265      0.791   -6157.393    4690.114
+x1          3584.7077   1569.000      2.285      0.022     507.610    6661.806
+x2          2.681e+04   2105.974     12.731      0.000    2.27e+04    3.09e+04
+x3          1340.2188   1645.204      0.815      0.415   -1886.329    4566.767
+x4         -1.648e+04   2434.222     -6.770      0.000   -2.13e+04   -1.17e+04
+==============================================================================
+Omnibus:                     1046.768   Durbin-Watson:                   1.917
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             9381.925
+Skew:                           2.376   Prob(JB):                         0.00
+Kurtosis:                      12.638   Cond. No.                         6.61
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+

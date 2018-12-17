@@ -117,3 +117,13 @@ def customer_df(sti, eti, std, etd, allsin, amort=False):
     f.write(write_amort+'\n')
     f.close()
     return x, y, eti, allsin, amort
+
+def read_command_line():
+    if len(sys.argv) < 5:
+        print("Invalid inputs")
+        return None, None, None, True
+    else:
+        boundary = sys.argv[2]
+        allow_single = True if sys.argv[3]=="single" else False
+        try_combos = True if sys.argv[4]=="combos" else False
+        return boundary, allow_single, try_combos, False

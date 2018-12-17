@@ -1,0 +1,33 @@
+[5, 9, 15]
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                      y   R-squared:                       0.037
+Model:                            OLS   Adj. R-squared:                  0.036
+Method:                 Least Squares   F-statistic:                     24.93
+Date:                Tue, 04 Dec 2018   Prob (F-statistic):           7.96e-16
+Time:                        23:43:45   Log-Likelihood:                -18210.
+No. Observations:                1950   AIC:                         3.643e+04
+Df Residuals:                    1946   BIC:                         3.645e+04
+Df Model:                           3                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const       -581.5340    195.446     -2.975      0.003    -964.839    -198.229
+x1           388.4779    111.977      3.469      0.001     168.871     608.085
+x2           325.7508    134.506      2.422      0.016      61.961     589.541
+x3             0.0222      0.003      7.663      0.000       0.017       0.028
+==============================================================================
+Omnibus:                     1983.935   Durbin-Watson:                   2.025
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            97155.233
+Skew:                           5.025   Prob(JB):                         0.00
+Kurtosis:                      36.087   Cond. No.                     1.55e+05
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.55e+05. This might indicate that there are
+strong multicollinearity or other numerical problems.
+
+
+
