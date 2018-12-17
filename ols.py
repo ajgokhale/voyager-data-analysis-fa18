@@ -170,6 +170,3 @@ for i in range(len(dep_results)):
     curr_time = curr_time.replace(":", "-")
     name += '-' + curr_time
     write_data.save_ols_results(results, str(i)+"-"+name)
-
-# if we eventually want predictions
-# predictions = model.predict(data_df)
