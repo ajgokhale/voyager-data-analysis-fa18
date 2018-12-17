@@ -8,14 +8,15 @@ import amortizing
 
 from datetime import date
 
-# utility functions to convert date strings to encoded int
-# encoded date is comparable, but does not support arithmetic
+# utility functions that extract year and month from date strings
 def encode_year(date_str):
     date = date_str.split('/')
     return int(date[2])
 def encode_month(date_str):
     date = date_str.split('/')
     return int(date[0]) + int(date[2])*12
+# utility function that converts date strings to datetime object;
+# datetime object is comparable and supports arithmetic
 def encode_date(date_str):
     date_lst = date_str.split('/')
     if date_lst[0] == '2' and date_lst[1] == '29':
@@ -199,6 +200,7 @@ class Customer:
 ####################
 #SALES METRICS
 ####################
+
     def total_revenue(self):
         total = 0
         for index in range(len(self.customer_history.values)):
@@ -214,6 +216,7 @@ class Customer:
                 if purchase > 0:
                     total += purchase
         return total
+
     def sales_revenue(self):
         total = 0
         for index in range(len(self.customer_history.values)):
@@ -222,6 +225,7 @@ class Customer:
             if encoded >= self.start and encoded < self.end:
                 total += self.customer_history['msrp'].values[index]
         return total
+
     def service_revenue(self):
         total = 0
         for index in range(len(self.service_history.values)):
@@ -264,6 +268,7 @@ class Customer:
         if max_value < 0: return 0
         if max_value > 10000: return 0
         return max_value
+
     def min_purchase(self):
         min_value = float('inf')
         for index in range(len(self.customer_history.values)):
@@ -280,13 +285,6 @@ class Customer:
             encoded = encode_date(date)
             if encoded >= self.start and encoded < self.end:
                 total += self.customer_history['msrp'].values[index]
-        # for index in range(len(self.service_history.values)):
-        #     date = self.service_history['datetime'].values[index]
-        #     encoded = encode_date(date)
-        #     if encoded >= self.start and encoded < self.end:
-        #         purchase = self.service_history['amount_paid'].values[index]
-        #         if purchase > 0:
-        #             total += purchase
         return total
 
     # Need to confirm this is correct
@@ -440,35 +438,6 @@ class Customer:
     def paid_service_proportion(self):
         return self.total_service_revenue/self.total_sales_revenue
 
-############################
-############################
-
-    #Average amount of time between individual vehicle purchases
-    #How did we say we were doing datetime?
-    # def average_vehicle_interval(self):
-    #     count = 0
-    #     holder = list()
-    #     differences = list()
-    #     for index in range(len(self.customer_history.values)):
-    #         date = self.customer_history['datetime'].values[index]
-    #         encoded = encode_date(date)
-    #         if encoded >= self.start and encoded < self.end:
-    #             holder.append(encoded)
-    #             count +=1
-    #     holder.sort()
-    #     for i in range(len(holder) - 1):
-    #         delta = holder[i+1]-holder[i]
-    #         differences.append(delta.days)
-    #     if count == 1:
-    #         timeframe = self.end - self.start
-    #         return timeframe.days / 1.5
-    #     else:
-    #         return sum(differences)/(count - 1)
-
-
-############################
-############################
-
     #Ratio of time since last purchase versus average purchase interval
     def recency_score(self):
         date = encode_date(self.customer_history['datetime'].values[0])
@@ -482,9 +451,6 @@ class Customer:
                 last_purchase_date = max(last_purchase_date, encoded)
         diff = day - last_purchase_date
         return diff.days / average_interval
-
-############################
-############################
 
     #Number of intervals between servicing transactions that exceed X days
     def aggregate_service_inactivity(self, x_days):
@@ -500,19 +466,6 @@ class Customer:
             delta = holder[i+1] - holder[i]
             differences.append(delta.days)
         return len([y for y in differences if y > x_days])
-
-###CANNOT IMPLEMENT#########
-############################
-
-    #Average difference between year of purchase and model year of vehicle
-    #def year_disparity(self):
-    #    differences = list()
-    #    for index in range(len(self.customer_history.values)):
-    #        date = self.customer_history['datetime'].values[index]
-    #        purchase_year = encode_year(date)
-    #        model_year = self.customer_history['MODEL_YEAR'].values[index]
-    #        differences.append(purchase_year - model_year)
-    #    return sum(differences)/self.total_trans
 
     #Index reflecting consumer sentiment and buying intentions
     def calculate_mcsi_score(self):
